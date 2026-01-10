@@ -13,7 +13,7 @@ import { set as idbSet, get as idbGet, createStore, clear as idbClear } from "id
 import { getChatKeyFromIdb, storeSecretChatKeyInIdb, setDirectoryInIdb, getDirectoryFromIdb } from "../../config/IndexDb";
 import { encryptMessage, decryptMessage } from "../../config/rasCrypto";
 import { checkKeyFilesExist, privateKeyFileName, passwordFileName, getUserPrivateKey } from "../../config/fileFunctions";
-import { exportKeyAsPem } from "../../config/pemUtils";
+import { exportKeyAsPem } from "../../config/pemutils";
 import { encryptWithAesKey, exportKeyToBase64, generateAesKey } from "../../config/passwordEncrypt";
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -124,7 +124,7 @@ function ChatDropDown() {
                 method: 'GET',
                 credentials: 'include'
             });
-            
+
             let userData = {};
             if (userResponse.ok) {
                 userData = await userResponse.json();
@@ -135,12 +135,12 @@ function ChatDropDown() {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     id: userId,
                     username: userData.username || username,
                     displayName: userData.displayName || username,
                     email: userData.email || '',
-                    publicKey: publicPem 
+                    publicKey: publicPem
                 })
             });
 
@@ -269,9 +269,9 @@ function ChatDropDown() {
             }
             console.log("Fetched public key for chat setup");
             let secretB64;
-            let chatSecretKey = await getChatKeyFromIdb(username,partnerName, chatSecretKeyStore);
-            console.log("Called getChatKey from Idb",chatSecretKey);
-            
+            let chatSecretKey = await getChatKeyFromIdb(username, partnerName, chatSecretKeyStore);
+            console.log("Called getChatKey from Idb", chatSecretKey);
+
             if (!chatSecretKey) {
                 const getRes = await axios.get(`${API_BASE}/api/secret_key/${chatId}/${userId}/`, {
                     withCredentials: true,
@@ -285,7 +285,7 @@ function ChatDropDown() {
                             const decryptedKey = await decryptMessage(getRes.data, privateKey);
                             // If decryption succeeds, store it
                             secretB64 = decryptedKey;
-                            await storeSecretChatKeyInIdb(username,partnerName, getRes.data, chatSecretKeyStore);
+                            await storeSecretChatKeyInIdb(username, partnerName, getRes.data, chatSecretKeyStore);
                             console.log("Successfully decrypted and stored chat key from backend");
                         } else {
                             throw new Error("Private key not available");
@@ -303,7 +303,7 @@ function ChatDropDown() {
                             { secretKey: encryptedSecretKey, secretKey1: encryptedSecretKey1 },
                             { headers: { "Content-Type": "application/json" }, withCredentials: true }
                         );
-                        await storeSecretChatKeyInIdb(username,partnerName, encryptedSecretKey1, chatSecretKeyStore);
+                        await storeSecretChatKeyInIdb(username, partnerName, encryptedSecretKey1, chatSecretKeyStore);
                     }
                 } else {
                     // No key in backend, create new one
@@ -316,7 +316,7 @@ function ChatDropDown() {
                         { secretKey: encryptedSecretKey, secretKey1: encryptedSecretKey1 },
                         { headers: { "Content-Type": "application/json" }, withCredentials: true }
                     );
-                    await storeSecretChatKeyInIdb(username,partnerName, encryptedSecretKey1, chatSecretKeyStore);
+                    await storeSecretChatKeyInIdb(username, partnerName, encryptedSecretKey1, chatSecretKeyStore);
                 }
             }
             console.log("Chat keys setup completed");
@@ -398,16 +398,16 @@ function ChatDropDown() {
                         {!directorySet ? (
                             <>
                                 <p className="text-lg mb-4 leading-relaxed">
-                                    <strong>Important:</strong> Aapne registration ke time jo directory select ki thi, wahi directory select karein. 
+                                    <strong>Important:</strong> Aapne registration ke time jo directory select ki thi, wahi directory select karein.
                                     Us directory mein automatically <code className="bg-gray-700 px-1 rounded">data.codeamigoes</code> folder create hua hoga.
                                 </p>
                                 <p className="text-sm text-gray-300 mb-4">
-                                    <span className="font-medium">Example:</span> Agar aapne registration ke time <code className="bg-gray-700 px-1 rounded">Documents</code> folder select kiya tha, 
-                                    to ab bhi wahi <code className="bg-gray-700 px-1 rounded">Documents</code> folder select karein. 
+                                    <span className="font-medium">Example:</span> Agar aapne registration ke time <code className="bg-gray-700 px-1 rounded">Documents</code> folder select kiya tha,
+                                    to ab bhi wahi <code className="bg-gray-700 px-1 rounded">Documents</code> folder select karein.
                                     Usmein <code className="bg-gray-700 px-1 rounded">data.codeamigoes</code> folder automatically hoga.
                                 </p>
                                 <p className="text-sm text-blue-300 mb-6">
-                                    <strong>Note:</strong> Aapko manually kuch bhi create karne ki zarurat nahi hai. 
+                                    <strong>Note:</strong> Aapko manually kuch bhi create karne ki zarurat nahi hai.
                                     Bas wahi directory select karein jahan aapne registration ke time select ki thi.
                                 </p>
                             </>
@@ -515,9 +515,9 @@ function ChatDropDown() {
                     </div>
                     <div className="w-3/4 flex flex-col h-[calc(100vh-4rem)] text-center overflow-hidden justify-center">
                         {personalChatOpen ? (
-                            <PersonalChatChat 
-                                memberId={member2Id} 
-                                memberName={member2Name} 
+                            <PersonalChatChat
+                                memberId={member2Id}
+                                memberName={member2Name}
                                 isKeySetupComplete={isKeySetupComplete} // Pass key setup status
                             />
                         ) : (
