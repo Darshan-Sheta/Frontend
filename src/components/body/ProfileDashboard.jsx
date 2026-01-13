@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import ProfileSection from "../profile/ProfileSection";
+import { getUserFrameworks } from "../../apiEndpoints";
+
 import ShimmerEffect from "../shimmer/ShimmerEffect";
 import { useParams } from "react-router-dom";
 import GitHubCard from "../profile/GitHubCard";
 import LeetCodeCard from "../profile/LeetCodeCard";
-import CodeChefCard from "../profile/CodeChefCard";
+import ProfileLeftColumn from "../profile/ProfileLeftColumn";
 import GitJudgeProfile from "../profile/GitJudgeProfile";
 
 
-import CodeforcesCard from "../profile/CodeforcesCard";
+
 import GradientBackground from "../background/GradientBackground";
 import { FaGithub, FaLinkedin, FaInstagram, FaTrophy } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
@@ -113,11 +114,13 @@ const ProfileDashboard = () => {
 
   const params = useParams();
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(null);
   const [userData, setUserData] = useState({});
   const [githubData, setGithubData] = useState(null);
   const [leetcodeData, setLeetcodeData] = useState(null);
   const [codechefData, setCodechefData] = useState(null);
   const [codeforcesData, setCodeforcesData] = useState(null);
+  const [frameworks, setFrameworks] = useState([]);
 
   const username = params.username;
 
@@ -135,7 +138,44 @@ const ProfileDashboard = () => {
         });
         setSuccess(true);
       })
-      .catch((error) => console.error("Error fetching user data:", error));
+      .catch(async (err) => {
+        console.warn("First attempt failed, trying fallback...", err.message);
+        // Fallback: If username has hyphens, try replacing them with spaces (common mismatch issue)
+        if (username.includes("-")) {
+          try {
+            const fallbackUsername = username.replace(/-/g, " ");
+            console.log(`Retrying with: ${fallbackUsername}`);
+            const retryResponse = await axios.get(`${API_BASE}/api/users/${fallbackUsername}`, {
+              withCredentials: true,
+            });
+            console.log("Fallback successful!", retryResponse.data);
+            setUserData(retryResponse.data);
+            setUserData(prev => ({ ...prev, ...retryResponse.data }));
+            setSuccess(true);
+            return; // Exit if success
+          } catch (retryErr) {
+            console.error("Fallback also failed:", retryErr);
+          }
+        }
+
+        console.error("Error fetching user data:", err);
+        setError(err.message || "Failed to load profile data.");
+      });
+  }, [username]);
+
+  // Fetch Frameworks
+  useEffect(() => {
+    async function loadFrameworks() {
+      if (!username) return;
+      const data = await getUserFrameworks(username);
+      if (data && !data.error && typeof data === 'object') {
+        const arr = Object.entries(data)
+          .map(([name, val]) => ({ name, value: val }))
+          .sort((a, b) => b.value - a.value);
+        setFrameworks(arr);
+      }
+    }
+    loadFrameworks();
   }, [username]);
 
   // Fetch platform data only when userData is successfully set
@@ -228,195 +268,120 @@ const ProfileDashboard = () => {
   );
 
   return (
-    <GradientBackground className="min-h-screen text-white flex flex-col p-6 pt-28">
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Left Side - Profile Section */}
-        <div className="flex flex-col gap-6 w-[32rem]">
-          {!success ? (
-            <>
-              <ProfileSectionShimmer />
-              {/* Social Media Cards Grid with Shimmer */}
-              <div className="grid grid-cols-2 gap-y-8 pl-12">
-                {[...Array(8)].map((_, index) => (
-                  <SocialCardShimmer key={index} />
-                ))}
-              </div>
-            </>
+    <GradientBackground className="min-h-screen text-text-main flex flex-col p-4 md:p-6 lg:p-8 pt-24 md:pt-28">
+
+      {/* Main Layout Container: 2 Columns */}
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 max-w-[1600px] mx-auto w-full">
+
+        {/* ==================== LEFT COLUMN (Sidebar) ==================== */}
+        <div className="w-full lg:w-[380px] xl:w-[420px] flex-shrink-0 ">
+          {error ? (
+            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 text-center">
+              <h3 className="font-bold mb-2">Error</h3>
+              <p>{error}</p>
+            </div>
+          ) : !success ? (
+            <ProfileSectionShimmer />
           ) : (
-            <>
-              <ProfileSection
-                imageUrl={githubData?.avatar_url || userData.avatarUrl || "https://github.com/github.png"}
-                countryFlagUrl={codechefData?.countryFlag || ""}
-                name={userData.displayName}
+            <div className="sticky top-28 space-y-6">
+              <ProfileLeftColumn
+                userData={userData}
+                githubData={githubData}
+                codechefData={codechefData}
+                frameworks={frameworks}
+                platformConfig={platformConfig}
                 username={username}
-                githubUsername={userData.githubUsername}
-                bio={userData.bio}
-                emoji={userData.emoji}
-                coverImageUrl={
-                  userData.coverPhotoUrl
-                    ? userData.coverPhotoUrl
-                    : "https://images.unsplash.com/photo-1504805572947-34fad45aed93?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmFjZWJvb2slMjBjb3ZlcnxlbnwwfHwwfHx8MA%3D%3D"
-                }
               />
-
-              {/* Add Certifications Section before Stats Overview */}
-              {/* <div className="bg-gray-900 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition duration-300 backdrop-blur-md border border-gray-700 ml-10 mb-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <FaCertificate className="text-yellow-400 text-xl" />
-                  <h3 className="text-lg font-semibold">
-                    Professional Certifications
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {certifications.map((cert, index) => (
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-12 h-12 mb-3 rounded-full bg-white/10 flex items-center justify-center">
-                        <img
-                          src={cert.icon}
-                          alt={cert.issuer}
-                          className="w-15 h-15 rounded-full shadow-lg bg-cover bg-center"
-                        />
-                      </div>
-                      <h4 className={`font-medium ${cert.color} mb-1`}>
-                        {cert.name}
-                      </h4>
-                      <p className="text-sm text-gray-400">{cert.issuer}</p>
-                      <p className="text-xs text-gray-500 mt-1">{cert.date}</p>
-                    </div>
-                  ))}
-                </div>
-              </div> */}
-
-              {/* Social Media Cards Grid */}
-              <div className="grid grid-cols-2 gap-y-8 pl-12">
-                {platformConfig
-                  .filter((platform) => userData[platform.usernameKey])
-                  .map((platform) => (
-                    <ProfileCard
-                      key={platform.platform}
-                      platform={platform.platform}
-                      username={userData[platform.usernameKey]}
-                      icon={platform.icon}
-                      link={`${platform.baseUrl}${userData[platform.usernameKey]
-                        }`}
-                      bgColor={platform.bgColor}
-                    />
-                  ))}
-              </div>
-            </>
+            </div>
           )}
         </div>
 
-        {/* Right Side - Platform Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 pl-20">
-          {!githubData ? (
-            <CardShimmer />
-          ) : githubData.failed ? (
-            <div className="bg-gray-900/50 backdrop-blur-md rounded-lg p-6 border border-gray-700 flex items-center justify-center text-gray-400">
-              GitHub data unavailable
-            </div>
-          ) : (
-            <>
-              <GitHubCard
-                platform="GitHub Stats"
-                stats={[
-                  {
-                    label: "Total Repositories",
-                    value: githubData.public_repos,
-                  },
-                  { label: "Followers", value: githubData.followers },
-                  { label: "Following", value: githubData.following },
-                ]}
-              />
-              <div className="bg-gray-900 rounded-lg p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 backdrop-blur-md border border-gray-700">
-                <img
-                  src={`https://github-readme-activity-graph.vercel.app/graph?username=${userData.githubUsername}&theme=tokyo-night`}
-                  alt="GitHub Activity Graph"
-                />
+
+        {/* ==================== RIGHT COLUMN (Main Content) ==================== */}
+        <div className="flex-1 flex flex-col gap-6 min-w-0 my-10">
+
+          {/* ROW 1: AI Analysis & LeetCode (Side-by-Side) */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+            {/* AI Analysis / GitJudge (Left) */}
+            <div className="flex flex-col gap-6">
+              <div className="glass-card rounded-2xl p-6 h-full border border-white/10 flex flex-col justify-center">
+                {userData?.githubUsername ? (
+                  <GitJudgeProfile username={userData.githubUsername} githubData={githubData} isSidebar={false} />
+                ) : (
+                  <div className="text-center text-gray-500">AI Analysis Unavailable</div>
+                )}
               </div>
-
-            </>
-
-          )}
-          {!githubData ? (
-            <CardShimmer />
-          ) : (
-            <GitHubCard
-              platform="GitHub Stats"
-              imgUrl1={`https://github-contributor-stats.vercel.app/api?username=${userData.githubUsername}&limit=5&theme=tokyonight&combine_all_yearly_contributions=true&hide_border=true&bg_color=0d0d0d&card_width=466`}
-              imgUrl2={`https://streak-stats.demolab.com/?user=${userData.githubUsername}&theme=dark&hide_border=true&card_width=497&bg_color=0d0d0d`}
-              stats={[]}
-            />
-          )}
-
-          {!leetcodeData ? (
-            <CardShimmer />
-          ) : leetcodeData.failed ? (
-            <div className="bg-gray-900/50 backdrop-blur-md rounded-lg p-6 border border-gray-700 flex items-center justify-center text-gray-400">
-              LeetCode data unavailable
             </div>
-          ) : (
-            <LeetCodeCard
-              platform="LeetCode Stats"
-              stats={[
-                {
-                  label: "Acceptance Rate",
-                  value: leetcodeData.acceptanceRate,
-                },
-                { label: "Ranking", value: leetcodeData.ranking },
-              ]}
-              imgUrl={`https://leetcard.jacoblin.cool/${userData.leetcodeUsername}?theme=dark&font=inter&ext=heatmap`}
-            />
-          )}
 
-
-
-          {/* Random Quoat */}
-          <div className="bg-gray-900 rounded-lg p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 backdrop-blur-md border border-gray-700">
-            <h3 className="text-2xl font-bold text-blue-400 mb-4">
-              ✍🏻 Random Dev Quote
-            </h3>
-            <img
-              src={
-                "https://quotes-github-readme.vercel.app/api?type=horizontal&theme=tokyonight"
-              }
-              alt="quote"
-              className="w-full h-auto rounded-lg"
-            />
+            {/* LeetCode Stats Card (Right) */}
+            <div className="flex flex-col gap-6 my-20">
+              {!leetcodeData ? (
+                <CardShimmer />
+              ) : leetcodeData.failed ? (
+                <div className="glass-card rounded-2xl p-6 flex items-center justify-center text-text-muted h-64 border border-white/10">
+                  LeetCode Data Unavailable
+                </div>
+              ) : (
+                <LeetCodeCard
+                  platform="LeetCode Stats"
+                  stats={[
+                    {
+                      label: "Acceptance Rate",
+                      value: leetcodeData.acceptanceRate,
+                    },
+                    { label: "Ranking", value: leetcodeData.ranking },
+                  ]}
+                  imgUrl={`https://leetcard.jacoblin.cool/${userData.leetcodeUsername}?theme=light&font=inter&ext=heatmap`}
+                />
+              )}
+            </div>
           </div>
 
-
-          {!userData ? (
-            <>
+          {/* ROW 2: GitHub Advanced Stats (Full Width) */}
+          <div className="w-full">
+            {!githubData ? (
               <CardShimmer />
-            </>
-          ) : (
-            <>
-              {/* Added GIF after CodeChef cards */}
-              <div className="bg-gray-900 rounded-lg p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 backdrop-blur-md border border-gray-700">
-                <img
-                  src={
-                    userData.gifUrl
-                      ? userData.gifUrl
-                      : "https://media.tenor.com/YZPnGuPeZv8AAAAd/coding.gif"
-                  }
-                  alt="Coding animation"
-                  className="w-full h-auto rounded-lg"
-                />
+            ) : (
+              <div className="glass-card rounded-2xl p-6 shadow-xl border border-white/10">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                  <FaGithub className="text-2xl" />
+                  Contribution & Analysis
+                </h3>
+                <div className="flex flex-col gap-6">
+                  <div className="w-full">
+                    <img
+                      src={`https://github-readme-activity-graph.vercel.app/graph?username=${userData.githubUsername}&theme=github&area=true&hide_border=true&bg_color=ffffff00&color=22272e&line=40c463&point=40c463`}
+                      alt="GitHub Activity Graph"
+                      className="w-full h-auto rounded-lg shadow-sm text-black"
+                    />
+                  </div>
+                </div>
+
               </div>
-            </>
+            )}
+          </div>
+
+          {/* ROW 3: Coding GIF (Optional spacer/footer element) */}
+          {!userData ? (
+            <CardShimmer />
+          ) : (
+            <div className="glass-card rounded-2xl p-0 overflow-hidden shadow-2xl border border-white/10 opacity-60 hover:opacity-100 transition-opacity">
+              <img
+                src={
+                  userData.gifUrl
+                    ? userData.gifUrl
+                    : "https://media.tenor.com/YZPnGuPeZv8AAAAd/coding.gif"
+                }
+                alt="Coding animation"
+                className="w-full h-48 object-cover object-center"
+              />
+            </div>
           )}
 
         </div>
+
       </div>
-
-      {/* GitJudge AI Section */}
-      {userData?.githubUsername && (
-        <div className="w-full mt-10 mb-10 border-t border-gray-800 pt-10">
-          <GitJudgeProfile username={userData.githubUsername} githubData={githubData} />
-        </div>
-      )}
-
     </GradientBackground>
   );
 };

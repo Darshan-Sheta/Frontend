@@ -4,70 +4,69 @@ import { FaCode, FaStar, FaUser } from "react-icons/fa";
 
 const HackathonCandidateCard = ({ candidate }) => {
     // New structure: { userId, name, score, matchedSkills }
-    const { userId, name, score, matchedSkills = [] } = candidate;
-    
-    // Extract username from userId or use name as fallback
-    const username = userId || name?.toLowerCase().replace(/\s+/g, '') || 'user';
+    const { userId, username: backendUsername, name, score, matchedSkills = [] } = candidate;
+
+    // Prioritize backend username, then fallback to userId if it looks like a username (not recommended but safe), or name
+    const username = backendUsername || name?.toLowerCase().replace(/\s+/g, '') || 'user';
     const displayName = name || 'Unknown User';
     const avatarUrl = `https://github.com/${username}.png`; // Fallback to GitHub avatar
 
     return (
-        <div className="relative bg-gray-900 border border-white/20 shadow-lg p-6 rounded-2xl text-white transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl overflow-hidden flex flex-col md:flex-row items-center gap-6">
+        <div className="relative glass-card border border-white/40 shadow-lg p-6 rounded-2xl text-text-main transform transition-all duration-300 hover:scale-[1.01] hover:shadow-xl overflow-hidden flex flex-col md:flex-row items-center gap-6 group">
 
-            {/* Background/Cover Effect */}
-            <div className="absolute inset-0 z-0">
-                <div className="w-full h-full bg-gradient-to-r from-gray-900 to-gray-800 opacity-50"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/90 to-transparent"></div>
-            </div>
+            {/* Soft Background Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
             {/* Avatar & Info */}
-            <div className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left gap-2 w-full md:w-auto">
+            <div className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left gap-3 w-full md:w-auto min-w-[140px]">
                 <Link to={`/dashboard/profile/${username}`}>
-                    <div className="relative">
+                    <div className="relative group/avatar">
+                        <div className="absolute inset-0 bg-accent/20 rounded-full blur-xl opacity-0 group-hover/avatar:opacity-100 transition-opacity"></div>
                         <img
                             src={avatarUrl}
                             alt={username}
-                            className="w-20 h-20 rounded-full border-2 border-purple-500 shadow-md object-cover bg-gray-800"
+                            className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover relative z-10"
                             onError={(e) => {
-                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=6366f1&color=fff`;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=D9A299&color=fff`;
                             }}
                         />
                     </div>
                 </Link>
                 <div>
-                    <h3 className="text-xl font-bold">{displayName}</h3>
-                    <p className="text-gray-400 text-sm">@{username}</p>
+                    <h3 className="text-xl font-bold text-text-main">{displayName}</h3>
+                    <p className="text-text-muted text-sm font-medium">@{username}</p>
                 </div>
             </div>
 
             {/* Stats/Skills */}
-            <div className="relative z-10 flex-1 w-full">
+            <div className="relative z-10 flex-1 w-full bg-white/40 rounded-xl p-4 border border-white/50">
                 {matchedSkills && matchedSkills.length > 0 && (
                     <div className="mb-4">
-                        <p className="text-gray-400 text-xs mb-2 uppercase tracking-wider">Matched Skills:</p>
+                        <p className="text-xs font-bold text-text-muted mb-2 uppercase tracking-wider flex items-center gap-2">
+                            <FaCode className="text-accent" /> Matched Skills
+                        </p>
                         <div className="flex flex-wrap gap-2">
                             {matchedSkills.slice(0, 5).map((skill, idx) => (
-                                <span key={idx} className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-xs border border-purple-500/30">
+                                <span key={idx} className="bg-white/80 backdrop-blur-sm text-text-main px-3 py-1 rounded-lg text-xs font-medium border border-border/50 shadow-sm">
                                     {skill}
                                 </span>
                             ))}
                             {matchedSkills.length > 5 && (
-                                <span className="text-gray-500 text-xs">+{matchedSkills.length - 5} more</span>
+                                <span className="text-text-muted text-xs font-medium self-center">+{matchedSkills.length - 5} more</span>
                             )}
                         </div>
                     </div>
                 )}
 
-                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                    <div className="bg-white/10 px-4 py-2 rounded-lg flex items-center gap-2 border border-white/10">
-                        <FaCode className="text-blue-400" />
-                        <span className="font-semibold text-lg">{matchedSkills.length}</span>
-                        <span className="text-xs text-gray-400 uppercase tracking-wider">Skills</span>
-                    </div>
-                    <div className="bg-white/10 px-4 py-2 rounded-lg flex items-center gap-2 border border-white/10">
-                        <FaStar className="text-yellow-400" />
-                        <span className="font-semibold text-lg">{score.toFixed(1)}</span>
-                        <span className="text-xs text-gray-400 uppercase tracking-wider">Score</span>
+                <div className="flex flex-wrap gap-4 justify-center md:justify-start pt-2 border-t border-black/5">
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-orange-100/50 text-orange-500">
+                            <FaStar size={14} />
+                        </div>
+                        <div>
+                            <span className="font-bold text-lg text-text-main block leading-none">{score.toFixed(1)}</span>
+                            <span className="text-[10px] text-text-muted uppercase font-bold tracking-wider">Match Score</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -75,7 +74,7 @@ const HackathonCandidateCard = ({ candidate }) => {
             {/* Action Button */}
             <div className="relative z-10 w-full md:w-auto mt-4 md:mt-0">
                 <Link to={`/dashboard/profile/${username}`}>
-                    <button className="w-full md:w-auto px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition-all">
+                    <button className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-accent to-orange-400 hover:shadow-lg hover:scale-105 text-white font-bold rounded-xl shadow-md transition-all text-sm">
                         View Profile
                     </button>
                 </Link>

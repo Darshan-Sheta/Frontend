@@ -3,12 +3,12 @@ import { SiCodeforces } from "react-icons/si";
 
 const CodeforcesCard = ({ platform, stats, imgUrl }) => {
     return (
-        <div className="bg-[#1F8AC7]/10 backdrop-blur-md rounded-lg p-6 hover:bg-[#1F8AC7]/20 transition-all duration-300 border border-gray-700/50 group h-full">
+        <div className="glass-card rounded-2xl p-6 h-full flex flex-col justify-between group">
             <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-[#1F8AC7]/20 rounded-lg text-[#1F8AC7] group-hover:scale-110 transition-transform duration-300">
+                <div className="p-2 bg-accent/10 rounded-lg text-accent group-hover:scale-110 transition-transform duration-300">
                     <SiCodeforces size={24} />
                 </div>
-                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                <h3 className="text-xl font-display font-bold text-text-main">
                     {platform}
                 </h3>
             </div>
@@ -17,10 +17,10 @@ const CodeforcesCard = ({ platform, stats, imgUrl }) => {
                 {stats.map((stat, index) => (
                     <div
                         key={index}
-                        className="bg-black/20 rounded-lg p-3 border border-white/5 hover:border-[#1F8AC7]/30 transition-colors"
+                        className="bg-background/50 rounded-xl p-3 border border-border/20 hover:border-accent/30 transition-colors shadow-sm"
                     >
-                        <p className="text-gray-400 text-sm mb-1">{stat.label}</p>
-                        <p className="text-white font-mono font-bold text-lg">
+                        <p className="text-text-muted text-xs mb-1">{stat.label}</p>
+                        <p className="text-text-main font-mono font-bold text-lg">
                             {stat.value}
                         </p>
                     </div>
@@ -28,11 +28,11 @@ const CodeforcesCard = ({ platform, stats, imgUrl }) => {
             </div>
 
             {imgUrl && (
-                <div className="relative rounded-lg overflow-hidden border border-white/10 group-hover:border-[#1F8AC7]/30 transition-colors">
+                <div className="relative rounded-xl overflow-hidden border border-border/20 group-hover:border-accent/20 transition-colors bg-white/50">
                     <img
                         src={imgUrl}
                         alt={`${platform} Graph`}
-                        className="w-full h-auto opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+                        className="w-full h-auto opacity-90 group-hover:opacity-100 transition-opacity duration-300 mix-blend-multiply"
                     />
                 </div>
             )}

@@ -1,5 +1,6 @@
 // rsaCrypto.js
 // Encrypt/decrypt using RSA-OAEP with PEM keys (already converted)
+import { arrayBufferToBase64Robust, base64ToArrayBufferRobust } from "./keyManagement";
 
 // Convert PEM to ArrayBuffer
 function pemToArrayBuffer(pem) {
@@ -15,25 +16,6 @@ function pemToArrayBuffer(pem) {
   return bytes.buffer;
 }
 
-// Convert ArrayBuffer to Base64
-function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-// Convert Base64 to ArrayBuffer
-function base64ToArrayBuffer(base64) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
 
 // Import PEM public key to CryptoKey
 export async function importPublicKey(pem) {
@@ -77,7 +59,7 @@ export async function encryptMessage(plaintext, publicKeyPem) {
     publicKey,
     encoded
   );
-  return arrayBufferToBase64(encrypted);
+  return arrayBufferToBase64Robust(encrypted);
 }
 
 // Decrypt base64 ciphertext with PEM private key
@@ -87,10 +69,10 @@ export async function decryptMessage(ciphertextBase64, privateKeyPem) {
   console.log(privateKeyPem);
   const privateKey = await importPrivateKey(privateKeyPem);
   console.log(`ImportedPrivateKey: ${privateKey} `);
-  
-  const encryptedBuffer = base64ToArrayBuffer(ciphertextBase64);
-  console.log(`EncryptedBuffer ${encryptedBuffer} `);
-  
+
+  const encryptedBuffer = base64ToArrayBufferRobust(ciphertextBase64);
+  console.log(`EncryptedBuffer size: ${encryptedBuffer.byteLength}`);
+
   const decrypted = await window.crypto.subtle.decrypt(
     {
       name: 'RSA-OAEP',
@@ -98,7 +80,7 @@ export async function decryptMessage(ciphertextBase64, privateKeyPem) {
     privateKey,
     encryptedBuffer
   );
-  
+
   console.log(`Decrypted: ${decrypted}`);
 
   const decoder = new TextDecoder();

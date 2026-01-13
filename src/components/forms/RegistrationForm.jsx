@@ -7,9 +7,11 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext";
 import { exportKeyAsPem } from "../../config/pemutils";
 import { log } from "sockjs-client/dist/sockjs";
-import { privateKeyFileName, passwordFileName } from "../../config/fileFunctions";
-import { encryptWithAesKey, exportKeyToBase64, generateAesKey } from "../../config/passwordEncrypt";
-import { setDirectoryInIdb } from "../../config/IndexDb";
+// Imports removed as they are no longer needed
+// import { privateKeyFileName, passwordFileName } from "../../config/fileFunctions";
+import { encryptWithAesKey, exportKeyToBase64, generateAesKey, deriveKeyFromPassword } from "../../config/passwordEncrypt";
+import { setPrivateKeyInIdb } from "../../config/IndexDb";
+import { ensureBrowserKeys } from "../../config/keyManagement";
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 const RegistrationForm = () => {
@@ -64,6 +66,8 @@ const RegistrationForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState("");
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -81,30 +85,20 @@ const RegistrationForm = () => {
     setError(null);
 
     try {
-      // 1. Generate RSA keypair
-      const keyPair = await window.crypto.subtle.generateKey(
-        {
-          name: 'RSA-OAEP',
-          modulusLength: 2048,
-          publicExponent: new Uint8Array([1, 0, 1]),
-          hash: 'SHA-256'
-        },
-        true,
-        ['encrypt', 'decrypt']
-      );
+      // 1. Ensure browser keys exist
+      const { publicPem, privatePem } = await ensureBrowserKeys(formData.username);
 
-      // 2. Export PEMs
-      const publicPem = await exportKeyAsPem(keyPair.publicKey, 'PUBLIC');
-      const privatePem = await exportKeyAsPem(keyPair.privateKey, 'PRIVATE');
-
-      // 3. Store private PEM in localStorage for quick access
+      // 2. Store publicKey in localStorage for quick access
       localStorage.setItem('rsaPublicKey', publicPem);
-      // localStorage.setItem('rsaPrivateKey', privatePem);
 
-      // 4. Build registration payload
-      const registrationData = { ...formData, publicKey: publicPem };
+      // 3. Build registration payload
+      const registrationData = {
+        ...formData,
+        publicKey: publicPem,
+        // No longer sending encrypted private key to server for security
+      };
 
-      // 5. Call backend
+      // 4. Call backend
       const response = await fetch(`${API_BASE}/api/users/register`, {
         method: 'POST',
         credentials: 'include',
@@ -116,50 +110,34 @@ const RegistrationForm = () => {
         throw new Error(typeof data === 'string' ? data : JSON.stringify(data));
       }
 
-      // 6. Mark success
-      setSuccess(true);
-
-      // 7. Prompt for a directory and save encrypted private key + password
+      // 5. Encrypt and backup the private key immediately
       try {
-        // a) Pick base folder
-        const baseHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-        // Set the directory in indexDb
-        await setDirectoryInIdb(baseHandle);
-
-        const dataDir = await baseHandle.getDirectoryHandle('data.codeamigoes', { create: true });
-        const privDir = await dataDir.getDirectoryHandle('privateData', { create: true });
-
-        // b) Encrypt the private key with a generated AES key
-        const secretPassword = await generateAesKey();
-        const exportedPassword = await exportKeyToBase64(secretPassword); // export for writing
-        console.log("secretPassword (Base64):", exportedPassword);
-
-        const encryptedPrivateKey = await encryptWithAesKey(privatePem, secretPassword);
-
-        // d) Write encrypted private key to JSON file
-        const privFH = await privDir.getFileHandle(privateKeyFileName, { create: true });
-        const privW = await privFH.createWritable();
-        await privW.write(JSON.stringify(encryptedPrivateKey, null, 2)); // pretty-print JSON
-        await privW.close();
-
-        // e) Write AES password (Base64) to .key file
-        const pwFH = await privDir.getFileHandle(passwordFileName, { create: true });
-        const pwW = await pwFH.createWritable();
-        await pwW.write(exportedPassword);
-        await pwW.close();
-
-        console.log('Saved encrypted private key and AES password locally');
-      } catch (fsErr) {
-        if (fsErr.name === 'AbortError') {
-          console.log('User cancelled directory selection.');
-          throw new Error('Directory selection cancelled. Secure chat will not work without it.');
-        }
-        console.error('File-system save failed:', fsErr);
-        throw new Error('Please select a directory to securely store your private key.');
+        console.log("🔐 Backing up private key for new user...");
+        const { KeyBackupService } = await import("../../services/KeyBackupService");
+        await KeyBackupService.backupKey(formData.username, formData.password);
+      } catch (backupErr) {
+        console.error("Failed to backup initial private key:", backupErr);
+        // We don't block registration success, but this is a risk
       }
 
-      // 8. Navigate on success
-      navigate('/dashboard');
+      setSuccess(true);
+
+      // 7. Recovery Code Flow
+      try {
+        const { KeyBackupService } = await import("../../services/KeyBackupService");
+        const code = KeyBackupService.generateRecoveryCode();
+        setRecoveryCode(code);
+
+        console.log("🔐 Backing up with recovery code...");
+        await KeyBackupService.backupWithRecoveryCode(formData.username, code);
+
+        setShowRecoveryModal(true);
+        // We do NOT navigate yet. User must click "I saved it" in modal.
+      } catch (recErr) {
+        console.error("Recovery code generation failed:", recErr);
+        // Fallback if recovery fails (should unlikely fail locally)
+        navigate('/dashboard');
+      }
 
     } catch (err) {
       setError(err.message);
@@ -169,57 +147,109 @@ const RegistrationForm = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-black to-gray-800 overflow-y-auto relative">
+    <div className="min-h-screen w-full bg-background overflow-y-auto relative flex items-center justify-center py-20">
+
+      {/* Recovery Code Modal */}
+      {showRecoveryModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl border-2 border-accent relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-accent to-orange-400"></div>
+
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-4 text-3xl">
+                🛡️
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Save Your Recovery Code</h2>
+              <p className="text-gray-600 mb-6 text-sm">
+                This code is the <strong>ONLY</strong> way to restore your access if you forget your password. We cannot recover it for you.
+              </p>
+
+              <div className="w-full bg-gray-50 p-5 rounded-xl border border-dashed border-gray-300 mb-6 relative group">
+                <p className="font-mono text-xl font-bold text-accent tracking-wide select-all break-words">
+                  {recoveryCode}
+                </p>
+                <div className="absolute top-2 right-2 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Click to copy
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 w-full">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(recoveryCode);
+                    // Optional: show copied toast
+                  }}
+                  className="w-full py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  📋 Copy to Clipboard
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="w-full py-3 bg-gradient-to-r from-accent to-orange-400 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all"
+                >
+                  ✅ I have saved this code
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Close button */}
       <Link to="/">
-        <button className="fixed top-4 right-4 z-50 bg-gray-800 text-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-700 transition-colors text-xl">
+        <button className="fixed top-6 right-6 z-50 bg-white/50 hover:bg-white text-text-main rounded-full w-12 h-12 flex items-center justify-center border border-border/50 hover:shadow-md transition-all text-xl">
           ✕
         </button>
       </Link>
 
       {/* Main content */}
-      <div className="container mx-auto px-10 py-20">
+      <div className="container mx-auto px-6 relative z-10">
         <motion.div
-          className="relative z-10 bg-gradient-to-br from-gray-800 via-gray-900 to-black rounded-xl shadow-2xl p-10 w-full max-w-3xl mx-auto backdrop-filter backdrop-blur-lg bg-opacity-50 border border-gray-700"
+          className="relative z-10 glass-card p-10 w-full max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeInOut" }}
         >
-          <h1 className="text-5xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500 mb-8">
-            <Typewriter
-              words={["Welcome to TeamBond"]}
-              loop={1}
-              cursor
-              cursorStyle="|"
-              typeSpeed={100}
-              deleteSpeed={50}
-              delaySpeed={500}
-            />
-          </h1>
+          <div className="text-center mb-10">
+            <h1 className="text-4xl md:text-5xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent to-orange-400 mb-4 tracking-tight">
+              <Typewriter
+                words={["Welcome to TeamBond"]}
+                loop={1}
+                cursor
+                cursorStyle="|"
+                typeSpeed={100}
+                deleteSpeed={50}
+                delaySpeed={500}
+              />
+            </h1>
+            <p className="text-text-muted text-lg">
+              Let's set up your account and start your journey!
+            </p>
+          </div>
 
           {success && (
-            <div className="mb-6 p-4 bg-green-500 bg-opacity-20 border border-green-500 rounded-lg text-green-400 text-center">
+            <div className="mb-6 p-4 bg-green-100 border border-green-200 rounded-xl text-green-700 text-center text-sm font-medium">
               Registration successful! Welcome to TeamBond!
             </div>
           )}
 
           {error && (
-            <div className="mb-6 p-4 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg text-red-400 text-center">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-center text-sm font-medium">
               {error}
             </div>
           )}
 
-          <p className="text-center text-gray-400 mb-8">
-            Let's set up your account and start your journey!
-          </p>
-
-          <div className="mb-6 p-4 bg-blue-500 bg-opacity-20 border border-blue-500 rounded-lg text-blue-300 text-center">
-            During registration, you'll need to select a directory for your personal secure chats, which rely on end-to-end encryption. This directory will safely store your private key, which is essential for enabling this encryption. Please avoid modifying or deleting anything in this directory, as doing so will disrupt your secure chats, disable the personal chat feature entirely, and, in the worst case, result in the permanent loss of your chats. To proceed, make sure to select the directory! In case you lose this directory, please email <a href="mailto:codeamigoes7@gmail.com" className="underline hover:text-blue-100">codeamigoes7@gmail.com</a> for assistance.
+          <div className="mb-8 p-5 bg-blue-50 border border-blue-100 rounded-xl text-blue-800 text-sm leading-relaxed text-center">
+            During registration, you'll need to select a directory for your personal secure chats, which rely on end-to-end encryption. This directory will safely store your private key. Please avoid modifying this directory. <br /> In case of loss, email <a href="mailto:codeamigoes7@gmail.com" className="underline font-semibold hover:text-blue-900">codeamigoes7@gmail.com</a>.
           </div>
 
           <form
             onSubmit={handleSubmit}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-8"
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
             {[
               {
@@ -233,36 +263,36 @@ const RegistrationForm = () => {
                 label: "GitHub Username",
                 name: "githubUsername",
                 type: "text",
-                placeholder: "e.g., ompatel22",
+                placeholder: "e.g., Jay-thummar",
                 readOnly: true,
               },
               {
                 label: "LeetCode Username",
                 name: "leetcodeUsername",
                 type: "text",
-                placeholder: "e.g., khushi703",
+                placeholder: "e.g., jay-thummar",
                 required: true,
               },
               {
                 label: "CodeChef Username",
                 name: "codechefUsername",
                 type: "text",
-                placeholder: "e.g., nirav0804",
+                placeholder: "e.g., jay-thummar",
                 required: true,
               },
               {
                 label: "GitHub email",
                 name: "email",
                 type: "email",
-                placeholder: "e.g., nayanthacker28@gmail.com",
+                placeholder: "e.g., rajeshthummar1978@gmail.com",
               },
             ].map((field) => (
               <div
                 key={field.name}
-                className={`${field.label === "GitHub email" ? "sm:col-span-2" : "col-span-1"
-                  } hover:scale-105 transition-transform transform`}
+                className={`${field.label === "GitHub email" ? "md:col-span-2" : "col-span-1"
+                  } group`}
               >
-                <label className="block text-lg font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-text-main mb-2">
                   {field.label}
                 </label>
                 <input
@@ -272,16 +302,16 @@ const RegistrationForm = () => {
                   onChange={handleInputChange}
                   placeholder={field.placeholder}
                   readOnly={field.readOnly || false}
-                  className={`w-full px-4 py-3 rounded-lg bg-gray-700 text-gray-200 placeholder-gray-400 border border-gray-600 focus:ring-4 focus:ring-blue-500 focus:outline-none transition-all ${field.readOnly ? "cursor-not-allowed bg-gray-600" : ""
+                  className={`w-full px-4 py-3 rounded-xl bg-white/50 text-text-main placeholder-text-muted/50 border border-border focus:ring-2 focus:ring-accent/50 focus:border-accent focus:outline-none transition-all hover:bg-white/80 ${field.readOnly ? "cursor-not-allowed opacity-70" : ""
                     }`}
                 />
               </div>
             ))}
-            <div className="col-span-1 sm:col-span-2">
+            <div className="col-span-1 md:col-span-2 mt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-lg shadow-md hover:from-blue-700 hover:to-purple-700 hover:scale-105 transition-transform transform ${loading ? "opacity-50 cursor-not-allowed" : ""
+                className={`w-full py-4 bg-gradient-to-r from-accent to-orange-400 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 ${loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
               >
                 {loading ? "Registering..." : "Register"}
@@ -291,28 +321,20 @@ const RegistrationForm = () => {
         </motion.div>
       </div>
 
-      {/* Animated Background Elements */}
-      {/* <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-      <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-blue-500 rounded-full opacity-30 blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-purple-500 rounded-full opacity-30 blur-3xl animate-pulse"></div>
-      <div className="absolute top-10 right-10 w-48 h-48 bg-pink-500 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-    </div> */}
+      {/* Background Ambience */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[10%] left-[5%] w-[30%] h-[30%] bg-accent/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-[10%] right-[5%] w-[30%] h-[30%] bg-orange-200/20 rounded-full blur-3xl" />
+      </div>
 
       {/* Scrolling Text */}
       <div className="fixed w-full bottom-10 overflow-hidden pointer-events-none">
         <motion.div
-          className="whitespace-nowrap text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400"
+          className="whitespace-nowrap text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-accent via-orange-300 to-accent"
           animate={{ x: ["100%", "-100%"] }}
-          transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
+          transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
         >
-          {/* {features.map((feature, index) => (
-          <span
-            key={index}
-            className="mx-12 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400"
-          >
-            {feature}
-          </span>
-        ))} */}
+          {/* Scrolling text content here if needed */}
         </motion.div>
       </div>
     </div>

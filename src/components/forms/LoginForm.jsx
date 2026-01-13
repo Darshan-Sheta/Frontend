@@ -4,6 +4,11 @@ import { Typewriter } from "react-simple-typewriter";
 import { Link, useNavigate } from "react-router-dom";
 import { httpClient } from "../../config/AxiosHelper";
 import useChatContext from "../../context/ChatContext";
+import { deriveKeyFromPassword, decryptWithAesKey, exportKeyToBase64 } from "../../config/passwordEncrypt";
+console.log("Loaded passwordEncrypt functions:", { deriveKeyFromPassword, decryptWithAesKey });
+import { setPrivateKeyInIdb } from "../../config/IndexDb";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
 const LoginForm = () => {
   const navigate = useNavigate();
   const { roomId, currentUser, connected, setConnected, setRoomId, setCurrentUser } = useChatContext();
@@ -26,6 +31,44 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+
+  // Recovery State
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryCodeInput, setRecoveryCodeInput] = useState("");
+  const [loginResponseData, setLoginResponseData] = useState(null);
+
+  // Handle Recovery Submission
+  const handleRecoverySubmit = async () => {
+    if (!recoveryCodeInput || !loginResponseData) return;
+
+    try {
+      const { KeyBackupService } = await import("../../services/KeyBackupService");
+      const restored = await KeyBackupService.restoreWithRecoveryCode(
+        loginResponseData.username,
+        recoveryCodeInput,
+        loginResponseData.encryptedRecoveryPrivateKey,
+        loginResponseData.recoveryKeyIv,
+        loginResponseData.publicKey
+      );
+
+      if (restored) {
+        console.log("✅ Chat unlocked with Recovery Code!");
+
+        // AUTO-RE-ENCRYPTION LOGIC
+        console.log("🔄 Auto-syncing private key with current password...");
+        await KeyBackupService.backupKey(loginResponseData.username, formData.password);
+        console.log("✅ Keys updated to new password successfully.");
+
+        setShowRecoveryModal(false);
+        navigate("/dashboard");
+      } else {
+        alert("Invalid Recovery Code. Please try again.");
+      }
+    } catch (err) {
+      console.error("Recovery failed:", err);
+      alert("Error occurred during recovery.");
+    }
+  };
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -61,6 +104,7 @@ const LoginForm = () => {
       }
       console.log(data);
 
+
       setSuccess(true);
       localStorage.setItem("username", data.username);
       localStorage.setItem("userId", data.id);
@@ -70,9 +114,55 @@ const LoginForm = () => {
       setCurrentUser(data.username);
       setConnected(true);
       setRoomId(data.collegeName);
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1000);
+      setRoomId(data.collegeName);
+
+      // --- Key Backup/Restore Logic ---
+      try {
+        console.log("🔐 Checking for private key backup...");
+        const { KeyBackupService } = await import("../../services/KeyBackupService"); // Dynamic import
+
+        if (data.encryptedPrivateKey && data.privateKeyIv) {
+          // Case 1: Server has backup -> Restore it
+          const restored = await KeyBackupService.restoreKey(
+            data.username,
+            formData.password,
+            data.encryptedPrivateKey,
+            data.privateKeyIv,
+            data.publicKey // Pass the public key from the server response
+          );
+          if (restored) {
+            console.log("Chat keys restored successfully!");
+            setTimeout(() => navigate("/dashboard"), 1000);
+          } else {
+            console.error("Failed to restore chat keys.");
+
+            // Check if we can recover using code
+            if (data.encryptedRecoveryPrivateKey) {
+              console.log("⚠️ Prompting for Recovery Code...");
+              setLoginResponseData(data);
+              setShowRecoveryModal(true);
+              return; // Stop navigation
+            }
+
+            // If no recovery possible, proceed
+            setTimeout(() => navigate("/dashboard"), 1000);
+          }
+        } else {
+          // Case 2: No backup on server -> Check local and backup if exists, or generate new
+          console.log("⚠️ No backup found on server. Checking local keys...");
+          await KeyBackupService.backupKey(data.username, formData.password);
+          setTimeout(() => navigate("/dashboard"), 1000);
+        }
+      } catch (keyError) {
+        console.error("Key backup/restore error:", keyError);
+        setTimeout(() => navigate("/dashboard"), 1000);
+      }
+      // -------------------------------
+
+      // Navigation moved inside restore logic blocks
+      // setTimeout(() => {
+      //   navigate("/dashboard");
+      // }, 1000);
     } catch (err) {
       // Ensure that error message is properly displayed
       setError("Invalid username or password");
@@ -82,53 +172,54 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-black to-gray-800 overflow-y-auto relative">
+    <div className="min-h-screen w-full bg-background overflow-y-auto relative flex items-center justify-center">
       {/* Close button */}
       <Link to="/">
-        <button className="fixed top-4 right-4 z-50 bg-gray-800 text-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-700 transition-colors text-xl">
+        <button className="fixed top-6 right-6 z-50 bg-white/50 hover:bg-white text-text-main rounded-full w-12 h-12 flex items-center justify-center border border-border/50 hover:shadow-md transition-all text-xl">
           ✕
         </button>
       </Link>
 
       {/* Main content */}
-      <div className="container mx-auto px-10 py-20">
+      <div className="container mx-auto px-6 py-20 relative z-10">
         <motion.div
-          className="relative z-10 bg-gradient-to-br from-gray-800 via-gray-900 to-black rounded-xl shadow-2xl p-10 w-full max-w-2xl mx-auto backdrop-filter backdrop-blur-lg bg-opacity-50 border border-gray-700"
+          className="relative z-10 glass-card p-10 w-full max-w-lg mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeInOut" }}
         >
-          <h1 className="text-5xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500 mb-8 leading-[1.2] pb-2">
-            <Typewriter
-              words={["Login to TeamBond"]}
-              loop={1} // Run only once
-              cursor
-              cursorStyle="|"
-              typeSpeed={100}
-              deleteSpeed={50}
-              delaySpeed={1000}
-            />
-          </h1>
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent to-orange-400 mb-4 tracking-tight">
+              <Typewriter
+                words={["Login to TeamBond"]}
+                loop={1}
+                cursor
+                cursorStyle="|"
+                typeSpeed={100}
+                deleteSpeed={50}
+                delaySpeed={1000}
+              />
+            </h1>
+            <p className="text-text-muted">
+              Enter your credentials to access your account.
+            </p>
+          </div>
 
           {success && (
-            <div className="mb-6 p-4 bg-green-500 bg-opacity-20 border border-green-500 rounded-lg text-green-400 text-center">
+            <div className="mb-6 p-4 bg-green-100 border border-green-200 rounded-xl text-green-700 text-center text-sm font-medium">
               Login successful!
             </div>
           )}
 
           {error && (
-            <div className="mb-6 p-4 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg text-red-400 text-center">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-center text-sm font-medium">
               {error}
             </div>
           )}
 
-          <p className="text-center text-gray-400 mb-8">
-            Enter your credentials to access your account.
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="hover:scale-105 transition-transform transform">
-              <label className="block text-lg font-medium text-gray-300 mb-2">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="group">
+              <label className="block text-sm font-medium text-text-main mb-2">
                 Username
               </label>
               <input
@@ -137,12 +228,12 @@ const LoginForm = () => {
                 value={formData.username}
                 onChange={handleInputChange}
                 placeholder="e.g., om_patel_22"
-                className="w-full px-4 py-3 rounded-lg bg-gray-700 text-gray-200 placeholder-gray-400 border border-gray-600 focus:ring-4 focus:ring-blue-500 focus:outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-white/50 text-text-main placeholder-text-muted/50 border border-border focus:ring-2 focus:ring-accent/50 focus:border-accent focus:outline-none transition-all hover:bg-white/80"
               />
             </div>
 
-            <div className="hover:scale-105 transition-transform transform">
-              <label className="block text-lg font-medium text-gray-300 mb-2">
+            <div className="group">
+              <label className="block text-sm font-medium text-text-main mb-2">
                 Password
               </label>
               <input
@@ -151,56 +242,74 @@ const LoginForm = () => {
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="Enter your password"
-                className="w-full px-4 py-3 rounded-lg bg-gray-700 text-gray-200 placeholder-gray-400 border border-gray-600 focus:ring-4 focus:ring-blue-500 focus:outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-white/50 text-text-main placeholder-text-muted/50 border border-border focus:ring-2 focus:ring-accent/50 focus:border-accent focus:outline-none transition-all hover:bg-white/80"
               />
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-lg shadow-md hover:from-blue-700 hover:to-purple-700 hover:scale-105 transition-transform transform ${loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-              >
-                {loading ? "Logging in..." : "Login"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-3.5 bg-gradient-to-r from-accent to-orange-400 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ${loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
           </form>
 
-          <p className="mt-6 text-center text-gray-400">
+          <p className="mt-8 text-center text-text-muted">
             Don't have an account?{" "}
-            <Link to="/register" className="text-blue-400 hover:underline">
+            <Link to="/register" className="text-accent font-medium hover:underline hover:text-orange-500 transition-colors">
               Register here
             </Link>
           </p>
         </motion.div>
       </div>
 
-      {/* Scrolling Text */}
-      <div className="fixed w-full bottom-10 overflow-hidden pointer-events-none">
-        <motion.div
-          className="whitespace-nowrap text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400"
-          animate={{ x: ["100%", "-100%"] }}
-          transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
-        >
-          {features.map((feature, index) => (
-            <span
-              key={index}
-              className="mx-12 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400"
-            >
-              {feature}
-            </span>
-          ))}
-        </motion.div>
-      </div>
+      {/* Recovery Code Restoration Modal */}
+      {showRecoveryModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl border-2 border-red-400"
+          >
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">⚠️ Key Restoration Failed</h2>
+            <p className="text-gray-600 mb-4 text-sm">
+              Your password could not unlock your chat history (it might have changed).
+              <br />Do you have a <strong>Recovery Code</strong>?
+            </p>
 
-      {/* Background Decorations
+            <input
+              type="text"
+              value={recoveryCodeInput}
+              onChange={(e) => setRecoveryCodeInput(e.target.value)}
+              placeholder="apple-river-house-..."
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 focus:ring-2 focus:ring-accent mb-4"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleRecoverySubmit()}
+                className="flex-1 py-3 bg-accent text-white font-bold rounded-xl hover:bg-accent/90"
+              >
+                Unlock with Code
+              </button>
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="px-4 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300"
+              >
+                Skip
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Background Ambience */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-blue-500 rounded-full opacity-30 blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-purple-500 rounded-full opacity-30 blur-3xl animate-pulse"></div>
-        <div className="absolute top-10 right-10 w-48 h-48 bg-pink-500 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-      </div> */}
-
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-200/20 rounded-full blur-3xl" />
+      </div>
     </div>
   );
 };

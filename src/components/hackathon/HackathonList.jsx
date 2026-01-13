@@ -79,8 +79,8 @@ const HackathonList = ({
         console.log(data);
 
         if (data.length == 0) {
-          setHackathons(["No recommended Hacathons found"])
-
+          setHackathons([]);
+          setFilteredHackathons([]);
         } else {
           const hackathons = data.map(item => item.hackathon)
           setHackathons(hackathons);
@@ -109,10 +109,15 @@ const HackathonList = ({
         type == "nearby" && <HackathonMap latitude={latitude} longitude={longitude} radius={radius} hackathons={filteredHackathons} />
       }
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-transparent">
-        {Array.isArray(filteredHackathons) &&
+        {Array.isArray(filteredHackathons) && filteredHackathons.length > 0 ? (
           filteredHackathons.map((hackathon, index) => (
             <HackathonCard key={index} {...hackathon} joinable={joinable} type={type} />
-          ))}
+          ))
+        ) : (
+          <div className="col-span-2 text-center text-gray-400 mt-10">
+            <p className="text-xl">No hackathons found matching your criteria.</p>
+          </div>
+        )}
       </div>
     </>
   );

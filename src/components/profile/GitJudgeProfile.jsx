@@ -3,7 +3,7 @@ import axios from 'axios';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import ShimmerEffect from '../shimmer/ShimmerEffect';
 
-const GitJudgeProfile = ({ username, githubData }) => {
+const GitJudgeProfile = ({ username, githubData, isSidebar = false }) => {
     const [analysis, setAnalysis] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -20,155 +20,166 @@ const GitJudgeProfile = ({ username, githubData }) => {
                     setLoading(false);
                 })
                 .catch(err => {
-                    console.error("Analysis Error:", err);
+                    // console.error("Analysis Error:", err);
                     setError(err.response?.data || "Failed to generate AI analysis.");
                     setLoading(false);
                 });
         }
     }, [username]);
 
-    if (loading) return <GitJudgeShimmer />;
-    if (loading) return <GitJudgeShimmer />;
+    if (loading) return <GitJudgeShimmer isSidebar={isSidebar} />;
     if (error) return (
-        <div className="w-full text-center p-6 bg-red-900/20 text-red-400 rounded-xl border border-red-800 mt-6">
-            <h3 className="font-bold">AI Analysis Failed</h3>
-            <p className="text-sm">{error}</p>
+        <div className="w-full text-center p-4 bg-red-900/10 text-red-400 rounded-xl border border-red-900/30 text-xs">
+            FAILED TO LOAD AI ANALYSIS
         </div>
     );
-    if (!analysis) return null;
     if (!analysis) return null;
 
     const { developer_type, levels_array, scores, analysis: details } = analysis;
 
-    // Transform levels_array for Radar Chart if needed, or stick to UI design
-    // Screenshot shows "Skill", "Consistency", "Hackathon" triangle which matches "scores"
     const chartData = [
-        { subject: 'Skill', A: scores?.skill || 0, fullMark: 100 },
-        { subject: 'Consistency', A: scores?.consistency || 0, fullMark: 100 },
-        { subject: 'Hackathon', A: scores?.hackathon_fit || 0, fullMark: 100 },
+        { subject: 'CORE MASTERY', A: scores?.skill || 0, fullMark: 100 },
+        { subject: 'DEV PACE', A: scores?.consistency || 0, fullMark: 100 },
+        { subject: 'HACKATHON EDGE', A: scores?.hackathon_fit || 0, fullMark: 100 },
     ];
 
+    const overallScore = Math.round((scores?.skill + scores?.consistency + scores?.hackathon_fit) / 3);
+
     return (
-        <div className="w-full text-white mt-10">
-            <div className="flex flex-col lg:flex-row gap-6">
+        <div className={`w-full text-white ${isSidebar ? '' : 'mt-10'}`}>
 
-                {/* SECTION 01: RAW GITHUB FETCH (Left Side - Implicitly covered by existing profile, but let's add the small summary card if requested or stick to AI part) 
-           The screenshot shows "SECTION 01" card. Let's rebuild it to match the visual. */
-                }
+            <div className={`flex flex-col ${isSidebar ? 'gap-4' : 'lg:flex-row gap-6'}`}>
+
+                {/* AI ANALYSIS CARD */}
                 <div className="flex-1 space-y-6">
-                    <div className="flex items-center gap-2 text-xl font-bold text-green-400 mb-2">
-                        <span className="text-2xl">stack</span> SECTION 01: RAW GITHUB FETCH
-                    </div>
 
-                    <div className="bg-[#0D1117] rounded-xl p-6 border border-gray-800 shadow-2xl relative overflow-hidden">
-                        <div className="flex items-start gap-4 z-10 relative">
-                            <img src={githubData?.avatar_url || "https://github.com/github.png"} className="w-24 h-24 rounded-xl border-2 border-gray-700" alt="avatar" />
-                            <div>
-                                <h2 className="text-3xl font-bold text-white">{githubData?.name || username}</h2>
-                                <p className="text-blue-400">@{username}</p>
-                                <div className="flex items-center gap-4 text-sm text-gray-400 mt-2">
-                                    <span>👥 {githubData?.followers} Followers</span>
-                                    <span>Current Repos: {githubData?.public_repos}</span>
+                    {/* Main Analysis Card */}
+                    <div className="glass-card rounded-2xl p-0 border border-black/5 overflow-hidden relative shadow-xl bg-white/40 backdrop-blur-xl">
+
+                        {/* Gradient Header Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent pointer-events-none" />
+
+                        <div className={`${isSidebar ? 'p-5 pb-0' : 'p-8 pb-4'}`}>
+
+                            <div className="flex items-start justify-between mb-4 relative z-10">
+                                <div>
+                                    <h4 className="text-[10px] font-black text-violet-600 tracking-[0.3em] uppercase mb-1 flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-violet-600 shadow-[0_0_10px_rgba(124,58,237,0.5)] animate-pulse" />
+                                        ARCHETYPE ANALYSIS
+                                    </h4>
+                                    <h2 className={`${isSidebar ? 'text-2xl' : 'text-4xl'} font-black text-slate-800 leading-tight tracking-tight`}>
+                                        {developer_type}
+                                    </h2>
                                 </div>
-                                {githubData?.location && <p className="text-gray-500 text-sm mt-1">📍 {githubData.location}</p>}
-                            </div>
-                        </div>
-                        <p className="mt-4 text-gray-400 italic">"{githubData?.bio || "Coding Building Growing !!!"}"</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                        {/* Languages Used */}
-                        <div className="bg-[#0D1117] rounded-xl p-6 border border-gray-800">
-                            <h3 className="text-yellow-500 font-bold mb-4 flex items-center gap-2">
-                                CODE LANGUAGES USED
-                            </h3>
-                            <div className="space-y-2">
-                                {details?.languages?.slice(0, 5).map((lang, idx) => (
-                                    <div key={idx} className="flex justify-between bg-gray-800/50 p-2 rounded px-3">
-                                        <span>{lang}</span>
+                                {/* Redesigned Premium Score Gauge */}
+                                <div className="relative group">
+                                    <div className="absolute inset-0 bg-violet-500/20 blur-2xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                    <div className="relative flex flex-col items-center">
+                                        <div className="w-24 h-24 relative flex items-center justify-center">
+                                            {/* SVG Gauge Background */}
+                                            <svg className="w-full h-full transform -rotate-90 drop-shadow-2xl">
+                                                <circle
+                                                    cx="48"
+                                                    cy="48"
+                                                    r="40"
+                                                    stroke="rgba(0,0,0,0.05)"
+                                                    strokeWidth="8"
+                                                    fill="transparent"
+                                                />
+                                                <circle
+                                                    cx="48"
+                                                    cy="48"
+                                                    r="40"
+                                                    stroke="url(#scoreGradient)"
+                                                    strokeWidth="8"
+                                                    fill="transparent"
+                                                    strokeDasharray="251.2"
+                                                    strokeDashoffset={251.2 - (251.2 * overallScore) / 100}
+                                                    className="transition-all duration-1000 ease-out"
+                                                    strokeLinecap="round"
+                                                />
+                                                <defs>
+                                                    <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                        <stop offset="0%" stopColor="#8b5cf6" />
+                                                        <stop offset="100%" stopColor="#ec4899" />
+                                                    </linearGradient>
+                                                </defs>
+                                            </svg>
+                                            {/* Score Text with Animated Feel */}
+                                            <div className="absolute flex flex-col items-center justify-center">
+                                                <span className="text-3xl font-black text-slate-800 tracking-tighter">
+                                                    <AnimatedNumber value={overallScore} />
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="text-[9px] font-black text-violet-600 uppercase tracking-[0.2em] mt-2 relative">
+                                            Dev Mastery
+                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-violet-600 rounded-full" />
+                                        </div>
                                     </div>
-                                ))}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Organizations */}
-                        <div className="bg-[#0D1117] rounded-xl p-6 border border-gray-800">
-                            <h3 className="text-purple-400 font-bold mb-4 flex items-center gap-2">
-                                ORGANIZATIONS
-                            </h3>
-                            <p className="text-gray-500 italic">None found (or fetched)</p>
-                        </div>
-                    </div>
-                </div>
-
-
-                {/* SECTION 02: AI EXPERT ANALYSIS (Right Side) */}
-                <div className="flex-1 space-y-6">
-                    <div className="flex items-center gap-2 text-xl font-bold text-blue-400 mb-2">
-                        <span className="text-2xl">shield</span> SECTION 02: AI EXPERT ANALYSIS
-                    </div>
-
-                    <div className="bg-[#0D1117] rounded-xl p-0 border border-gray-800 overflow-hidden relative">
-                        <div className="absolute top-0 right-0 bg-blue-600 text-white font-bold px-6 py-2 rounded-bl-xl z-20 shadow-lg text-xl">
-                            {Math.round((scores?.skill + scores?.consistency + scores?.hackathon_fit) / 3)}/100
-                        </div>
-
-                        <div className="p-8 pb-0">
-                            <h2 className="text-3xl font-bold text-white mb-2">{developer_type}</h2>
-                            <div className="flex flex-col md:flex-row items-center justify-between">
+                            <div className={`flex ${isSidebar ? 'flex-col' : 'flex-col md:flex-row'} items-center justify-between relative z-10`}>
 
                                 {/* Radar Chart */}
-                                <div className="w-full h-[250px] relative -ml-10">
+                                <div className={`w-full ${isSidebar ? 'h-[180px] -ml-6' : 'h-[250px] -ml-4'} relative`}>
                                     <ResponsiveContainer width="100%" height="100%">
                                         <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
-                                            <PolarGrid stroke="#374151" />
-                                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#9CA3AF', fontSize: 12 }} />
+                                            <PolarGrid stroke="rgba(0,0,0,0.1)" />
+                                            <PolarAngleAxis
+                                                dataKey="subject"
+                                                tick={{ fill: '#4b5563', fontSize: isSidebar ? 10 : 12, fontWeight: 700 }}
+                                            />
                                             <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                            <Radar name="Skills" dataKey="A" stroke="#3B82F6" strokeWidth={3} fill="#3B82F6" fillOpacity={0.3} />
+                                            <Radar
+                                                name="Profile"
+                                                dataKey="A"
+                                                stroke="#7c3aed"
+                                                strokeWidth={3}
+                                                fill="url(#radarGradient)"
+                                                fillOpacity={0.6}
+                                            />
+                                            <defs>
+                                                <linearGradient id="radarGradient" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.5} />
+                                                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.1} />
+                                                </linearGradient>
+                                            </defs>
                                         </RadarChart>
                                     </ResponsiveContainer>
                                 </div>
 
-                                {/* Main Tech Stack List */}
-                                <div className="bg-[#161B22] p-4 rounded-xl border border-gray-700 w-full md:w-64">
-                                    <h4 className="text-gray-400 text-xs font-bold uppercase mb-3 tracking-wider">MAIN STACK</h4>
-                                    <div className="space-y-2">
-                                        {details?.tech_stack_summary?.slice(0, 5).map((tech, i) => (
-                                            <div key={i} className="bg-[#21262D] px-3 py-1.5 rounded text-sm text-blue-300 border border-gray-700">
-                                                {tech}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className={`grid ${isSidebar ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-6'}`}>
                         {/* Skill Levels */}
-                        <div className="bg-[#0D1117] rounded-xl p-6 border border-gray-800">
-                            <h3 className="text-orange-500 font-bold mb-4 flex items-center gap-2">
-                                SKILL LEVELS
+                        <div className="glass-card rounded-2xl p-5 border border-black/5 bg-white/40 backdrop-blur-xl hover:border-black/10 transition-all">
+                            <h3 className="text-emerald-600 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <span className="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                                Skill Levels
                             </h3>
                             <div className="grid grid-cols-2 gap-3">
-                                {levels_array?.slice(0, 6).map((item, idx) => (
-                                    <div key={idx} className="bg-[#161B22] p-2 rounded border border-gray-700">
-                                        <div className="text-[10px] text-green-400 uppercase font-bold">{item.level}</div>
-                                        <div className="font-medium text-gray-200">{item.skill}</div>
+                                {levels_array?.slice(0, isSidebar ? 4 : 6).map((item, idx) => (
+                                    <div key={idx} className="group p-2 rounded-lg bg-white/50 border border-black/5 hover:bg-white/80 transition-colors">
+                                        <div className="text-[10px] text-emerald-600 uppercase font-black mb-1">{item.level}</div>
+                                        <div className="font-medium text-xs text-slate-700 truncate group-hover:text-slate-900 transition-colors">{item.skill}</div>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
                         {/* Applied Technologies */}
-                        <div className="bg-[#0D1117] rounded-xl p-6 border border-gray-800">
-                            <h3 className="text-pink-500 font-bold mb-4 flex items-center gap-2">
-                                APPLIED TECHNOLOGIES
+                        <div className="glass-card rounded-2xl p-5 border border-black/5 bg-white/40 backdrop-blur-xl hover:border-black/10 transition-all">
+                            <h3 className="text-pink-600 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <span className="w-1 h-4 bg-pink-500 rounded-full"></span>
+                                Tech Stack
                             </h3>
                             <div className="flex flex-wrap gap-2">
-                                {details?.technologies?.slice(0, 8).map((tech, idx) => (
-                                    <span key={idx} className="bg-[#161B22] text-gray-300 text-xs px-2.5 py-1 rounded-full border border-gray-700">
+                                {details?.technologies?.slice(0, isSidebar ? 6 : 8).map((tech, idx) => (
+                                    <span key={idx} className="bg-gradient-to-r from-pink-500/5 to-rose-500/5 text-pink-700 text-[11px] font-medium px-3 py-1.5 rounded-lg border border-pink-500/10 hover:border-pink-500/30 hover:bg-pink-500/10 transition-all">
                                         {tech}
                                     </span>
                                 ))}
@@ -182,13 +193,37 @@ const GitJudgeProfile = ({ username, githubData }) => {
     );
 };
 
-const GitJudgeShimmer = () => (
-    <div className="w-full mt-10 animate-pulse">
-        <div className="flex gap-6">
-            <ShimmerEffect className="flex-1 h-96 rounded-xl bg-gray-800/50" />
-            <ShimmerEffect className="flex-1 h-96 rounded-xl bg-gray-800/50" />
+const GitJudgeShimmer = ({ isSidebar }) => (
+    <div className={`w-full ${isSidebar ? 'mt-0' : 'mt-10'} animate-pulse`}>
+        <div className={`flex flex-col gap-4`}>
+            <ShimmerEffect className={`w-full ${isSidebar ? 'h-48' : 'h-96'} rounded-xl bg-gray-800/50`} />
+            <ShimmerEffect className="w-full h-32 rounded-xl bg-gray-800/50" />
         </div>
     </div>
 );
+
+const AnimatedNumber = ({ value }) => {
+    const [displayValue, setDisplayValue] = useState(0);
+
+    useEffect(() => {
+        let start = 0;
+        const duration = 1500;
+        const increment = Math.ceil(value / (duration / 16));
+
+        const timer = setInterval(() => {
+            start += increment;
+            if (start >= value) {
+                setDisplayValue(value);
+                clearInterval(timer);
+            } else {
+                setDisplayValue(start);
+            }
+        }, 16);
+
+        return () => clearInterval(timer);
+    }, [value]);
+
+    return <span>{displayValue}</span>;
+};
 
 export default GitJudgeProfile;

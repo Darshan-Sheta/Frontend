@@ -2,12 +2,12 @@ import React from "react";
 
 const GradientBackground = ({ children, className = "" }) => (
   <div
-    className={`relative bg-gradient-to-br from-gray-950 via-gray-950 via-gray-925 via-gray-900 via-gray-900 to-gray-900 overflow-hidden ${className}`}
+    className={`relative min-h-screen bg-background overflow-hidden selection:bg-accent/30 ${className}`}
   >
-    <div className="absolute top-0 left-0 right-0 bottom-0 overflow-hidden pointer-events-none">
-      <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px]" />
-      <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-purple-500/10 rounded-full blur-[100px]" />
-      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-[100px]" />
+    <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-accent/10 rounded-full blur-[120px] animate-pulse-slow" />
+      <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-orange-200/20 rounded-full blur-[100px] animate-float" />
+      <div className="absolute -bottom-[10%] left-[20%] w-[40%] h-[40%] bg-amber-100/30 rounded-full blur-[140px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
     </div>
     <div className="relative z-10">{children}</div>
   </div>

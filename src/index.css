@@ -1,1 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Poppins', 'Inter', sans-serif;
+
+  --color-background: #FAF7F3;
+  --color-surface: #F0E4D3;
+  --color-border: #DCC5B2;
+  --color-accent: #D9A299;
+
+  --color-text-main: #2B2B2B;
+  --color-text-muted: #454545;
+
+  --color-primary-50: #FDFCFB;
+  --color-primary-100: #FAF7F3;
+  --color-primary-200: #F0E4D3;
+  --color-primary-300: #E6D5C3;
+  --color-primary-400: #DCC5B2;
+  --color-primary-500: #D9A299;
+  --color-primary-600: #C08A82;
+  --color-primary-DEFAULT: #D9A299;
+
+  --shadow-premium: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+}
+
+/* Base Styles */
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+  color: var(--color-text-main);
+}
+
+/* Utilities */
+@layer utilities {
+  .glass {
+    @apply bg-white/20 backdrop-blur-lg border border-white/30;
+  }
+
+  .glass-card {
+    @apply bg-surface/40 backdrop-blur-md border border-white/20 shadow-premium hover:border-white/40 transition-all duration-300 hover:scale-[1.02];
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-text-main via-gray-700 to-gray-500;
+  }
+
+  .text-gradient-primary {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-accent to-orange-400;
+  }
+}
+
+/* Hide scrollbar globally */
+/* Chrome, Safari and Opera */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* IE, Edge and Firefox */
+* {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}

@@ -56,9 +56,9 @@ const HackathonRequestCard = ({ id, hackathonTitle, requestedBy, hackathonId, re
 
   const handleAccept = async () => {
     try {
-      await axios.put(`${API_BASE}/request/${id}/accepted`,{
-      withCredentials: true, // <-- This sends cookies!
-    });
+      await axios.put(`${API_BASE}/request/${id}/accepted`, {
+        withCredentials: true, // <-- This sends cookies!
+      });
       setStatusx("accepted");
     } catch (error) {
       console.error("Error updating request status:", error);
@@ -67,9 +67,9 @@ const HackathonRequestCard = ({ id, hackathonTitle, requestedBy, hackathonId, re
 
   const handleReject = async () => {
     try {
-      await axios.put(`${API_BASE}/request/${id}/rejected`,{
-      withCredentials: true, // <-- This sends cookies!
-    });
+      await axios.put(`${API_BASE}/request/${id}/rejected`, {
+        withCredentials: true, // <-- This sends cookies!
+      });
       setStatusx("rejected");
     } catch (error) {
       console.error("Error updating request status:", error);
@@ -78,43 +78,69 @@ const HackathonRequestCard = ({ id, hackathonTitle, requestedBy, hackathonId, re
 
   return (
     <div
-      className={`p-6 rounded-lg bg-gray-900 text-white border-2 ${border} transition-all duration-200 hover:shadow-lg hover:scale-[1.02]`}
+      className={`relative glass-card border border-white/40 shadow-lg p-6 rounded-2xl text-text-main transition-all duration-300 hover:scale-[1.01] hover:shadow-xl group overflow-hidden ${border}`}
     >
-      {/* Profile + Status */}
-      <div className="flex items-center gap-3">
-        <Link to={`/dashboard/profile/${requestedBy}`}>
-          <img
-            src={`https://github.com/${requestedBy}.png`}
-            alt={requestedBy}
-            className="h-12 w-12 rounded-full border border-gray-600 hover:border-white transition-all"
-          />
-        </Link>
-        <h3 className="text-lg font-semibold">{requestedBy}</h3>
-        {icon}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+      {/* Header: Profile & Status Icon */}
+      <div className="flex justify-between items-start relative z-10">
+        <div className="flex items-center gap-4">
+          <Link to={`/dashboard/profile/${requestedBy}`}>
+            <div className="relative group/avatar">
+              <div className="absolute inset-0 bg-accent/20 rounded-full blur-md opacity-0 group-hover/avatar:opacity-100 transition-opacity"></div>
+              <img
+                src={`https://github.com/${requestedBy}.png`}
+                alt={requestedBy}
+                className="h-14 w-14 rounded-full border-2 border-white shadow-sm object-cover relative z-10"
+              />
+            </div>
+          </Link>
+          <div>
+            <h3 className="text-lg font-bold text-text-main leading-tight">{requestedBy}</h3>
+            <p className="text-sm text-text-muted">requested to join</p>
+          </div>
+        </div>
+        <div className={`p-2 rounded-full bg-white/50 backdrop-blur-sm shadow-sm ${text}`}>
+          {icon}
+        </div>
       </div>
 
       {/* Hackathon Title */}
-      <Link to={`/dashboard/hackathons/${hackathonId}`} className="block mt-4">
-        <h4 className={`text-xl font-bold ${text} hover:text-white transition-all`}>
-          {hackathonTitle}
-        </h4>
-      </Link>
+      <div className="mt-5 mb-4 relative z-10">
+        <Link to={`/dashboard/hackathons/${hackathonId}`} className="block group/title">
+          <h4 className="text-xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-text-main to-gray-600 group-hover/title:text-accent transition-all duration-300">
+            {hackathonTitle}
+          </h4>
+        </Link>
+      </div>
 
       {/* Status & Timestamp */}
-      <p className="text-sm text-gray-300 mt-2">
-        <span className="font-semibold text-gray-400">Status:</span> <span className={text}>{statusx}</span>
-      </p>
-      <p className="text-sm text-gray-300">
-        <span className="font-semibold text-gray-400">Requested At:</span> {formatDate(requestedAt)}
-      </p>
+      <div className="relative z-10 flex flex-wrap gap-4 text-sm mt-2 pt-4 border-t border-border/30">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-text-muted uppercase tracking-wider text-xs">Status</span>
+          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${border.replace('border-', 'border-opacity-30 border-')} ${text.replace('text-', 'bg-opacity-10 bg-')} ${text}`}>
+            {statusx}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-text-muted uppercase tracking-wider text-xs">Requested At</span>
+          <span className="text-text-main font-medium">{formatDate(requestedAt)}</span>
+        </div>
+      </div>
 
       {/* Action Buttons */}
       {statusx === "pending" && (
-        <div className="mt-4 flex gap-3">
-          <button onClick={handleAccept} className={`px-4 py-2 text-white rounded-md text-sm bg-green-600 hover:bg-green-700`}>
-            Accept
+        <div className="mt-6 flex gap-3 relative z-10">
+          <button
+            onClick={handleAccept}
+            className="flex-1 py-2.5 px-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all font-bold text-sm tracking-wide"
+          >
+            Accept Request
           </button>
-          <button onClick={handleReject} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm">
+          <button
+            onClick={handleReject}
+            className="flex-1 py-2.5 px-4 bg-white border border-red-200 text-red-500 hover:bg-red-50 rounded-xl shadow-sm hover:shadow-md transition-all font-bold text-sm tracking-wide"
+          >
             Reject
           </button>
         </div>

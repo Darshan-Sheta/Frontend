@@ -34,12 +34,12 @@ const VerticalNavBar = ({
   return (
     <div className="flex h-screen">
       {/* Sidebar Navigation */}
-      <nav className="w-1/5 bg-gray-900/80 backdrop-blur-lg text-white shadow-lg p-4 flex flex-col space-y-4 rounded-lg mr-8 min-h-screen">
-        <h2 className="text-xl font-semibold mb-6 text-center">Hackathon Filters</h2>
+      <nav className="w-1/5 bg-white/40 backdrop-blur-xl border-r border-border/40 text-text-main shadow-lg p-4 flex flex-col space-y-4 rounded-lg mr-8 min-h-screen">
+        <h2 className="text-xl font-display font-semibold mb-6 text-center text-text-main">Hackathon Filters</h2>
         {tabs.map(({ key, label, locked }) => (
           <button
             key={key}
-            className={`p-3 rounded-lg text-left font-medium flex justify-between items-center transition ${activeTab === key ? "bg-gray-700" : "hover:bg-gray-800"
+            className={`p-3 rounded-lg text-left font-medium flex justify-between items-center transition-all duration-300 ${activeTab === key ? "bg-accent text-white shadow-md transform scale-105" : "hover:bg-surface hover:text-accent"
               } ${locked ? "opacity-50 cursor-not-allowed" : ""}`}
             onClick={() => handleTabChange(key, locked)}
             disabled={locked}

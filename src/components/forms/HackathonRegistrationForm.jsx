@@ -1,21 +1,21 @@
 import React, { useState, useEffect, use } from "react";
-import { Calendar, Upload, Globe, Plus, Trash2 } from "lucide-react";
+import { Calendar, Upload, Globe, Plus, Trash2, Sparkles } from "lucide-react";
 import Navigation from "../navigation/Navigation";
-import GradientBackground from "../background/GradientBackground";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
 const Input = ({ label, error, ...props }) => (
-  <div className="w-full">
+  <div className="w-full group">
     {label && (
-      <label className="block text-sm font-medium text-gray-200 mb-1">
+      <label className="block text-sm font-medium text-text-main mb-1">
         {label}
       </label>
     )}
     <input
-      className={`w-full px-3 py-2 bg-gray-900/50 border ${error ? "border-red-500" : "border-gray-700"
-        } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400`}
+      className={`w-full px-4 py-3 bg-white/50 border ${error ? "border-red-500" : "border-border"
+        } rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent text-text-main placeholder-text-muted/50 transition-all hover:bg-white/80`}
       {...props}
     />
     {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
@@ -23,15 +23,15 @@ const Input = ({ label, error, ...props }) => (
 );
 
 const Textarea = ({ label, error, ...props }) => (
-  <div className="w-full">
+  <div className="w-full group">
     {label && (
-      <label className="block text-sm font-medium text-gray-200 mb-1">
+      <label className="block text-sm font-medium text-text-main mb-1">
         {label}
       </label>
     )}
     <textarea
-      className={`w-full px-3 py-2 bg-gray-900/50 border ${error ? "border-red-500" : "border-gray-700"
-        } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400`}
+      className={`w-full px-4 py-3 bg-white/50 border ${error ? "border-red-500" : "border-border"
+        } rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent text-text-main placeholder-text-muted/50 transition-all hover:bg-white/80`}
       {...props}
     />
     {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
@@ -39,15 +39,15 @@ const Textarea = ({ label, error, ...props }) => (
 );
 
 const Select = ({ label, error, options, ...props }) => (
-  <div className="w-full">
+  <div className="w-full group">
     {label && (
-      <label className="block text-sm font-medium text-gray-200 mb-1">
+      <label className="block text-sm font-medium text-text-main mb-1">
         {label}
       </label>
     )}
     <select
-      className={`w-full px-3 py-2 bg-gray-900/50 border ${error ? "border-red-500" : "border-gray-700"
-        } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white`}
+      className={`w-full px-4 py-3 bg-white/50 border ${error ? "border-red-500" : "border-border"
+        } rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent text-text-main transition-all hover:bg-white/80`}
       {...props}
     >
       {options.map((option) => (
@@ -63,25 +63,25 @@ const Select = ({ label, error, options, ...props }) => (
 const RadioGroup = ({ label, options, value, onChange, error, ...props }) => (
   <div className="w-full">
     {label && (
-      <label className="block text-sm font-medium text-gray-200 mb-2">
+      <label className="block text-sm font-medium text-text-main mb-2">
         {label}
       </label>
     )}
-    <div className="flex space-x-4">
+    <div className="flex space-x-6">
       {options.map((option) => (
         <label
           key={option.value}
-          className="flex items-center space-x-2 cursor-pointer"
+          className="flex items-center space-x-2 cursor-pointer group"
         >
           <input
             type="radio"
             value={option.value}
             checked={value === option.value}
             onChange={onChange}
-            className="w-4 h-4 text-blue-500 border-gray-700 focus:ring-blue-500"
+            className="w-5 h-5 text-accent border-border focus:ring-accent"
             {...props}
           />
-          <span className="text-gray-200">{option.label}</span>
+          <span className="text-text-main group-hover:text-accent transition-colors">{option.label}</span>
         </label>
       ))}
     </div>
@@ -90,18 +90,18 @@ const RadioGroup = ({ label, options, value, onChange, error, ...props }) => (
 );
 
 const StepIndicator = ({ currentStep, totalSteps }) => (
-  <div className="flex items-center space-x-4 mb-4">
+  <div className="flex items-center space-x-4 mb-6">
     {[...Array(totalSteps)].map((_, index) => (
       <React.Fragment key={index}>
         <span
-          className={`h-8 w-8 rounded-full flex items-center justify-center ${index + 1 <= currentStep
-            ? "bg-blue-500 text-white"
-            : "bg-gray-700 text-gray-300"
+          className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-lg transition-all ${index + 1 <= currentStep
+            ? "bg-accent text-white shadow-lg shadow-accent/20"
+            : "bg-surface border border-border text-text-muted"
             }`}
         >
           {index + 1}
         </span>
-        {index < totalSteps - 1 && <div className="h-0.5 w-8 bg-gray-600" />}
+        {index < totalSteps - 1 && <div className={`h-1 flex-1 rounded-full ${index + 1 < currentStep ? "bg-accent" : "bg-border"}`} />}
       </React.Fragment>
     ))}
   </div>
@@ -138,6 +138,47 @@ const HackathonRegistrationForm = () => {
   });
 
   const [formErrors, setFormErrors] = useState({});
+
+  // GenAI Integration
+  const [genAiPrompt, setGenAiPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateDetails = async () => {
+    if (!genAiPrompt.trim()) return;
+    setIsGenerating(true);
+    try {
+      const response = await axios.post(`${API_BASE}/api/hackathons/generate-details`, {
+        description: genAiPrompt
+      });
+      const data = response.data;
+
+      setFormData(prev => ({
+        ...prev,
+        title: data.title || prev.title,
+        organization: data.organization || prev.organization,
+        theme: data.theme || prev.theme,
+        location: data.location || prev.location,
+        mode: (data.mode && data.mode.toLowerCase() === 'offline') ? 'offline' : 'online',
+        about: data.about || prev.about,
+        teamSize: data.teamSize || prev.teamSize,
+        techStacks: [...new Set([...prev.techStacks, ...(data.techStacks || [])])],
+        registrationDates: {
+          start: data.registrationDates?.start?.replace(" ", "T")?.slice(0, 16) || prev.registrationDates.start,
+          end: data.registrationDates?.end?.replace(" ", "T")?.slice(0, 16) || prev.registrationDates.end
+        },
+        hackathonDates: {
+          start: data.hackathonDates?.start?.replace(" ", "T")?.slice(0, 16) || prev.hackathonDates.start,
+          end: data.hackathonDates?.end?.replace(" ", "T")?.slice(0, 16) || prev.hackathonDates.end
+        }
+      }));
+      setSuccess(false); // Reset generic success just in case
+    } catch (err) {
+      console.error("GenAI Error", err);
+      setError("Failed to auto-fill details. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const allTechStackOptions = [
     { value: "", label: "Select Technology" },
@@ -389,50 +430,82 @@ const HackathonRegistrationForm = () => {
   }, [previewUrl]);
 
   return (
-    <GradientBackground className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="max-w-3xl mx-auto pt-32">
+      <div className="max-w-3xl mx-auto pt-32 pb-20 px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="bg-black/50 backdrop-blur-sm border border-gray-800 rounded-lg shadow-xl">
-            <div className="p-6 border-b border-gray-800">
+          <div className="glass-card rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-8 border-b border-border/50">
               <StepIndicator currentStep={step} totalSteps={2} />
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-3xl font-display font-bold text-text-main">
                 {step === 1 ? "Basic Details" : "Registration Details"}
               </h2>
-              <p className="mt-1 text-gray-400">
+              <p className="mt-2 text-text-muted">
                 {step === 1
                   ? "Fill in the basic information about your hackathon"
                   : "Configure registration settings and requirements"}
               </p>
             </div>
-            <div className="p-6">
+            <div className="p-8">
               {error && (
-                <div className="mb-4 p-4 bg-red-500/10 border border-red-500 rounded-lg">
-                  <p className="text-red-500">{error}</p>
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-red-600 font-medium">{error}</p>
                 </div>
               )}
               {success && (
-                <div className="mb-4 p-4 bg-green-500/10 border border-green-500 rounded-lg">
-                  <p className="text-green-500">
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <p className="text-green-600 font-medium">
                     Hackathon created successfully!
                   </p>
                 </div>
               )}
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-8">
                 {step === 1 ? (
                   <>
+                    {/* Gen AI Section */}
+                    <div className="bg-gradient-to-r from-accent/5 to-orange-400/5 p-6 rounded-2xl border border-accent/20 mb-8">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="h-5 w-5 text-accent" />
+                        <h3 className="text-lg font-semibold text-text-main">Magic Auto-fill</h3>
+                      </div>
+                      <p className="text-sm text-text-muted mb-4">
+                        Paste your hackathon announcement or description here, and our AI will fill out the form for you.
+                      </p>
+                      <div className="relative">
+                        <textarea
+                          value={genAiPrompt}
+                          onChange={(e) => setGenAiPrompt(e.target.value)}
+                          placeholder="e.g. 'HackTheFuture 2024 organized by TechCorp. Theme is AI for Good. Happening online from March 1st to 3rd. Teams of 2-4. Tech stack: Python, React, TensorFlow.'"
+                          className="w-full px-4 py-3 bg-white/50 border border-accent/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 min-h-[100px] pr-32"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleGenerateDetails}
+                          disabled={isGenerating || !genAiPrompt.trim()}
+                          className="absolute bottom-3 right-3 px-4 py-2 bg-gradient-to-r from-accent to-orange-400 text-white font-medium rounded-lg shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 text-sm"
+                        >
+                          {isGenerating ? (
+                            <span className="animate-spin">⌛</span>
+                          ) : (
+                            <Sparkles className="h-4 w-4" />
+                          )}
+                          {isGenerating ? "Generating..." : "Auto-fill"}
+                        </button>
+                      </div>
+                    </div>
+
                     <div className="w-full">
-                      <label className="block text-sm font-medium text-gray-200 mb-1">
+                      <label className="block text-sm font-medium text-text-main mb-2">
                         Hackathon Logo
                       </label>
-                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700 border-dashed rounded-lg">
+                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-border border-dashed rounded-xl bg-surface/50 hover:bg-surface transition-colors">
                         <div className="space-y-1 text-center">
                           {previewUrl ? (
                             <div className="flex flex-col items-center">
                               <img
                                 src={previewUrl}
                                 alt="Preview"
-                                className="h-64 w-96 object-cover rounded-lg mb-2"
+                                className="h-64 w-96 object-cover rounded-lg mb-4 shadow-md"
                               />
                               <button
                                 type="button"
@@ -444,16 +517,16 @@ const HackathonRegistrationForm = () => {
                                     logo: null,
                                   }));
                                 }}
-                                className="text-sm text-red-500 hover:text-red-400"
+                                className="text-sm font-medium text-red-500 hover:text-red-600"
                               >
                                 Remove
                               </button>
                             </div>
                           ) : (
                             <>
-                              <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                              <div className="flex text-sm text-gray-400">
-                                <label className="relative cursor-pointer rounded-md font-medium text-blue-500 hover:text-blue-400">
+                              <Upload className="mx-auto h-12 w-12 text-text-muted" />
+                              <div className="flex text-sm text-text-muted">
+                                <label className="relative cursor-pointer rounded-md font-medium text-accent hover:text-accent/80">
                                   <span>Upload a file</span>
                                   <input
                                     type="file"
@@ -464,7 +537,7 @@ const HackathonRegistrationForm = () => {
                                 </label>
                                 <p className="pl-1">or drag and drop</p>
                               </div>
-                              <p className="text-xs text-gray-400">
+                              <p className="text-xs text-text-muted/70">
                                 PNG, JPG, GIF up to 1MB
                               </p>
                             </>
@@ -533,7 +606,7 @@ const HackathonRegistrationForm = () => {
                       error={formErrors.about}
                     />
                     <div className="space-y-4">
-                      <label className="block text-sm font-medium text-gray-200">
+                      <label className="block text-sm font-medium text-text-main">
                         Tech Stacks
                       </label>
                       {formErrors.techStacks && (
@@ -558,7 +631,7 @@ const HackathonRegistrationForm = () => {
                             <button
                               type="button"
                               onClick={() => removeTechStack(index)}
-                              className="p-2 text-red-500 hover:text-red-400"
+                              className="p-3 bg-red-50 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-all self-end mb-1"
                               title="Remove Tech Stack"
                             >
                               <Trash2 className="h-5 w-5" />
@@ -569,7 +642,7 @@ const HackathonRegistrationForm = () => {
                       <button
                         type="button"
                         onClick={addTechStack}
-                        className="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                        className="flex items-center px-4 py-2 border border-dashed border-accent text-accent hover:bg-accent/10 rounded-lg transition-all"
                       >
                         <Plus className="h-5 w-5 mr-2" />
                         Add Tech Stack
@@ -578,7 +651,7 @@ const HackathonRegistrationForm = () => {
                     <button
                       type="button"
                       onClick={handleNext}
-                      className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                      className="w-full py-3.5 bg-gradient-to-r from-accent to-orange-400 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50"
                       disabled={loading}
                     >
                       Next
@@ -587,13 +660,13 @@ const HackathonRegistrationForm = () => {
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-200">
-                        Team Size(min)
+                      <label className="block text-sm font-medium text-text-main">
+                        Team Size (min)
                       </label>
-                      <div className="space-x-4">
+                      <div className="flex space-x-4 items-end">
                         <Input
                           type="number"
-                          placeholder="Min Team Size"
+                          placeholder="Min"
                           value={formData.teamSize.min}
                           onChange={(e) =>
                             handleInputChange("teamSize", {
@@ -605,23 +678,25 @@ const HackathonRegistrationForm = () => {
                           min="1"
                           error={formErrors.teamSizeMin}
                         />
-                        <label className="text-sm font-medium text-gray-200">
-                          Team size(max)
-                        </label>
-                        <Input
-                          type="number"
-                          placeholder="Max Team Size"
-                          value={formData.teamSize.max}
-                          onChange={(e) =>
-                            handleInputChange("teamSize", {
-                              ...formData.teamSize,
-                              max: parseInt(e.target.value),
-                            })
-                          }
-                          className="w-24 bg-white"
-                          min={formData.teamSize.min}
-                          error={formErrors.teamSizeMax}
-                        />
+                        <div className="pb-3 text-text-muted font-medium">to</div>
+                        <div className="flex-1">
+                          <label className="block text-sm font-medium text-text-main mb-1">Team Size (max)</label>
+                          <Input
+                            type="number"
+                            placeholder="Max"
+                            value={formData.teamSize.max}
+                            onChange={(e) =>
+                              handleInputChange("teamSize", {
+                                ...formData.teamSize,
+                                max: parseInt(e.target.value),
+                              })
+                            }
+                            className="w-24 bg-white"
+                            min={formData.teamSize.min}
+                            error={formErrors.teamSizeMax}
+                          />
+                        </div>
+
                       </div>
                     </div>
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -676,18 +751,18 @@ const HackathonRegistrationForm = () => {
                         error={formErrors.HackEndDate}
                       />
                     </div>
-                    <div className="flex space-x-4">
+                    <div className="flex space-x-4 pt-4">
                       <button
                         type="button"
                         onClick={() => setStep(1)}
-                        className="w-full py-2 px-4 bg-transparent hover:bg-gray-800 text-white border border-gray-600 rounded-lg transition-colors disabled:opacity-50"
+                        className="w-1/3 py-3.5 bg-transparent hover:bg-surface text-text-muted border border-border rounded-xl transition-all font-medium"
                         disabled={loading}
                       >
                         Back
                       </button>
                       <button
                         type="submit"
-                        className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                        className="w-2/3 py-3.5 bg-gradient-to-r from-accent to-orange-400 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50"
                         disabled={loading}
                       >
                         {loading ? "Creating..." : "Create Hackathon"}
@@ -700,7 +775,7 @@ const HackathonRegistrationForm = () => {
           </div>
         </div>
       </div>
-    </GradientBackground>
+    </div>
   );
 };
 

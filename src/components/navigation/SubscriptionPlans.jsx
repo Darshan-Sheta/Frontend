@@ -89,48 +89,54 @@ const SubscriptionPlans = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-10 flex justify-center items-center">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl w-full">
-        <div className="bg-white rounded-lg shadow-lg p-6 border-2 border-green-400">
-          <h2 className="text-2xl font-bold text-green-600 mb-4">Free Plan</h2>
-          <ul className="mb-6 space-y-2 text-gray-700">
-            <li>✅ Limited Chat Access</li>
-            <li>✅ Hackathon Viewing</li>
-            <li>🚫 No Team Matching</li>
-            <li>🚫 No Premium Chat</li>
+    <div className="min-h-screen bg-background p-10 flex justify-center items-center relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[10%] left-[10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-3xl opacity-50" />
+        <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-orange-200/20 rounded-full blur-3xl opacity-50" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl w-full z-10">
+        {/* Free Plan */}
+        <div className="glass-card rounded-2xl p-8 border border-border flex flex-col hover:scale-[1.02] transition-transform duration-300">
+          <h2 className="text-3xl font-display font-bold text-text-main mb-4">Free Plan</h2>
+          <div className="text-4xl font-bold text-text-muted mb-6">₹0<span className="text-lg font-normal text-text-muted/70">/month</span></div>
+          <ul className="mb-8 space-y-4 flex-1">
+            <li className="flex items-center text-text-muted"><span className="mr-2 text-green-500">✅</span> Limited Chat Access</li>
+            <li className="flex items-center text-text-muted"><span className="mr-2 text-green-500">✅</span> Hackathon Viewing</li>
+            <li className="flex items-center text-text-muted/50"><span className="mr-2 grayscale opacity-50">🚫</span> No Team Matching</li>
+            <li className="flex items-center text-text-muted/50"><span className="mr-2 grayscale opacity-50">🚫</span> No Premium Chat</li>
           </ul>
           <button
-            onClick={() =>
-              // navigate(
-              //   `/dashboard?username=${username}&userId=${userId}&githubUsername=${githubUserName}&status=${status}`
-              // )
-              navigate("/dashboard")
-            }
-            className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg w-full"
+            onClick={() => navigate("/dashboard")}
+            className="px-6 py-4 bg-surface border border-border hover:bg-white text-text-main font-semibold rounded-xl w-full transition-all"
           >
-            Free
+            Continue Free
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 border-2 border-purple-500">
-          <h2 className="text-2xl font-bold text-purple-600 mb-4">Premium Plan - ₹479</h2>
-          <ul className="mb-6 space-y-2 text-gray-700">
-            <li>✅ Full Chat Access</li>
-            <li>✅ Hackathon Participation</li>
-            <li>✅ AI-Based Team Matching</li>
-            <li>✅ Premium Support</li>
+        {/* Premium Plan */}
+        <div className="glass-card rounded-2xl p-8 border-2 border-accent/50 relative flex flex-col transform md:scale-105 shadow-xl hover:scale-[1.07] transition-transform duration-300">
+          <div className="absolute top-0 right-0 bg-accent text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">POPULAR</div>
+          <h2 className="text-3xl font-display font-bold text-text-main mb-4">Premium Plan</h2>
+          <div className="text-4xl font-bold text-accent mb-6">₹479<span className="text-lg font-normal text-text-muted">/lifetime</span></div>
+          <ul className="mb-8 space-y-4 flex-1">
+            <li className="flex items-center text-text-main font-medium"><span className="mr-2 text-accent">✅</span> Full Chat Access</li>
+            <li className="flex items-center text-text-main font-medium"><span className="mr-2 text-accent">✅</span> Hackathon Participation</li>
+            <li className="flex items-center text-text-main font-medium"><span className="mr-2 text-accent">✅</span> AI-Based Team Matching</li>
+            <li className="flex items-center text-text-main font-medium"><span className="mr-2 text-accent">✅</span> Premium Support</li>
           </ul>
           <button
             onClick={paymentOrder}
-            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg w-full"
+            className="px-6 py-4 bg-gradient-to-r from-accent to-orange-400 hover:shadow-lg text-white font-bold rounded-xl w-full transition-all"
           >
-            Buy Now
+            Get Premium Access
           </button>
         </div>
       </div>
       {showPaymentSuccessCard && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-2xl shadow-2xl border-4 border-purple-500 max-w-md w-full text-center animate-fade-in-up">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="glass-card p-8 rounded-2xl shadow-2xl max-w-md w-full text-center animate-fade-in-up">
             <PaymentSuccessCard />
           </div>
         </div>

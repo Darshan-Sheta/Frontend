@@ -37,7 +37,7 @@ const Navbar = ({ hackathons, setFilteredHackathons }) => {
   };
 
   return (
-    <nav className="shadow-md pt-4 pb-4 flex justify-between items-center text-white">
+    <nav className="glass shadow-sm pt-4 pb-4 flex justify-between items-center text-text-main px-6 rounded-2xl mx-4 mt-4">
       <div className="w-1/2 flex space-x-4">
         {/* Search by Title */}
         <div className="relative flex-1">
@@ -46,9 +46,9 @@ const Navbar = ({ hackathons, setFilteredHackathons }) => {
             placeholder="Search by Title..."
             value={titleSearch}
             onChange={handleTitleSearchChange}
-            className="w-full pl-10 pr-3 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-3 py-2 bg-white/50 border border-border/50 text-text-main rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-text-muted transition-all duration-300"
           />
-          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted" />
         </div>
 
         {/* Search by City */}
@@ -58,27 +58,27 @@ const Navbar = ({ hackathons, setFilteredHackathons }) => {
             placeholder="Search by City..."
             value={citySearch}
             onChange={handleCitySearchChange}
-            className="w-full pl-10 pr-3 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-3 py-2 bg-white/50 border border-border/50 text-text-main rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-text-muted transition-all duration-300"
           />
-          <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted" />
         </div>
       </div>
 
       {/* Action Buttons */}
       <div className="flex space-x-4">
         <Link to="/dashboard/hackathons/add">
-          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+          <button className="px-5 py-2.5 bg-accent text-white font-medium rounded-xl hover:bg-accent/80 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
             Add Hackathon
           </button>
         </Link>
         <Link to="/dashboard/hackathons/requests">
-          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+          <button className="px-5 py-2.5 bg-white text-text-main font-medium rounded-xl border border-border hover:border-accent hover:text-accent shadow-sm hover:shadow-md transition-all duration-300">
             Requests Received
           </button>
         </Link>
         <Link to="/dashboard/hackathons/requests/status">
-          <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-            Your Requests' Status
+          <button className="px-5 py-2.5 bg-white text-text-main font-medium rounded-xl border border-border hover:border-accent hover:text-accent shadow-sm hover:shadow-md transition-all duration-300">
+            Your Status
           </button>
         </Link>
       </div>

@@ -16,7 +16,6 @@ import {
   Sticker,
 } from "lucide-react";
 import Navigation from "../navigation/Navigation";
-import GradientBackground from "../background/GradientBackground";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
@@ -24,22 +23,22 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 // Reuse the Input component with icon support
 const Input = ({ label, error, icon: Icon, ...props }) => (
-  <div className="w-full">
+  <div className="w-full group">
     {label && (
-      <label className="block text-sm font-medium text-gray-200 mb-1">
+      <label className="block text-sm font-medium text-text-main mb-1">
         {label}
       </label>
     )}
     <div className="relative">
       {Icon && (
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Icon className="h-5 w-5 text-gray-400" />
+          <Icon className="h-5 w-5 text-text-muted" />
         </div>
       )}
       <input
         className={`w-full ${Icon ? "pl-10" : "pl-3"
-          } py-2 bg-gray-900/50 border ${error ? "border-red-500" : "border-gray-700"
-          } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400`}
+          } py-2 bg-white/50 border ${error ? "border-red-500" : "border-border"
+          } rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent text-text-main placeholder-text-muted/50 transition-all hover:bg-white/80`}
         {...props}
       />
     </div>
@@ -48,15 +47,15 @@ const Input = ({ label, error, icon: Icon, ...props }) => (
 );
 
 const Textarea = ({ label, error, ...props }) => (
-  <div className="w-full">
+  <div className="w-full group">
     {label && (
-      <label className="block text-sm font-medium text-gray-200 mb-1">
+      <label className="block text-sm font-medium text-text-main mb-1">
         {label}
       </label>
     )}
     <textarea
-      className={`w-full px-3 py-2 bg-gray-900/50 border ${error ? "border-red-500" : "border-gray-700"
-        } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400`}
+      className={`w-full px-3 py-2 bg-white/50 border ${error ? "border-red-500" : "border-border"
+        } rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent text-text-main placeholder-text-muted/50 transition-all hover:bg-white/80`}
       {...props}
     />
     {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
@@ -71,23 +70,23 @@ const ProfileEditForm = () => {
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
-    username: null,
-    password: null,
-    displayName: null,
-    email: null,
-    collegeName: null,
-    githubUsername: null,
-    leetcodeUsername: null,
-    codechefUsername: null,
-    bio: null,
-    linkedinurl: null,
-    twitterusername: null,
-    instagramusername: null,
-    portfolioUrl: null,
-    resumeUrl: null,
-    gifUrl: null,
-    coverPhotoUrl: null,
-    emoji: null,
+    username: "",
+    password: "",
+    displayName: "",
+    email: "",
+    collegeName: "",
+    githubUsername: "",
+    leetcodeUsername: "",
+    codechefUsername: "",
+    bio: "",
+    linkedinurl: "",
+    twitterusername: "",
+    instagramusername: "",
+    portfolioUrl: "",
+    resumeUrl: "",
+    gifUrl: "",
+    coverPhotoUrl: "",
+    emoji: "",
   });
 
   useEffect(() => {
@@ -101,25 +100,60 @@ const ProfileEditForm = () => {
 
         const profile = response.data;
         setFormData({
-          username: null,
-          displayName: profile.displayName,
-          email: profile.email,
-          collegeName: profile.collegeName,
-          githubUsername: profile.githubUsername,
-          leetcodeUsername: profile.leetcodeUsername,
-          codechefUsername: profile.codechefUsername,
-          bio: profile.bio,
-          linkedinurl: profile.linkedinurl,
-          twitterusername: profile.twitterusername,
-          instagramusername: profile.instagramusername,
-          resumeUrl: profile.resumeUrl,
-          portfolioUrl: profile.portfolioUrl,
-          gifUrl: profile.gifUrl,
-          coverPhotoUrl: profile.coverPhotoUrl,
-          emoji: profile.emoji,
+          username: "",
+          displayName: profile.displayName || "",
+          email: profile.email || "",
+          collegeName: profile.collegeName || "",
+          githubUsername: profile.githubUsername || "",
+          leetcodeUsername: profile.leetcodeUsername || "",
+          codechefUsername: profile.codechefUsername || "",
+          bio: profile.bio || "",
+          linkedinurl: profile.linkedinurl || "",
+          twitterusername: profile.twitterusername || "",
+          instagramusername: profile.instagramusername || "",
+          resumeUrl: profile.resumeUrl || "",
+          portfolioUrl: profile.portfolioUrl || "",
+          gifUrl: profile.gifUrl || "",
+          coverPhotoUrl: profile.coverPhotoUrl || "",
+          emoji: profile.emoji || "",
         });
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch profile");
+        console.warn("First fetch failed, trying fallback...", err);
+        if (username && username.includes("-")) {
+          try {
+            const fallbackUsername = username.replace(/-/g, " ");
+            console.log(`Retrying with: ${fallbackUsername}`);
+            const retryResponse = await axios.get(`${API_BASE}/api/users/${fallbackUsername}`, {
+              withCredentials: true,
+            });
+
+            const profile = retryResponse.data;
+            setFormData({
+              username: "",
+              displayName: profile.displayName || "",
+              email: profile.email || "",
+              collegeName: profile.collegeName || "",
+              githubUsername: profile.githubUsername || "",
+              leetcodeUsername: profile.leetcodeUsername || "",
+              codechefUsername: profile.codechefUsername || "",
+              bio: profile.bio || "",
+              linkedinurl: profile.linkedinurl || "",
+              twitterusername: profile.twitterusername || "",
+              instagramusername: profile.instagramusername || "",
+              resumeUrl: profile.resumeUrl || "",
+              portfolioUrl: profile.portfolioUrl || "",
+              gifUrl: profile.gifUrl || "",
+              coverPhotoUrl: profile.coverPhotoUrl || "",
+              emoji: profile.emoji || "",
+            });
+            return; // Success
+          } catch (retryErr) {
+            console.error("Fallback failed:", retryErr);
+            setError(err.response?.data?.message || "Failed to fetch profile");
+          }
+        } else {
+          setError(err.response?.data?.message || "Failed to fetch profile");
+        }
       }
     };
     fetchProfile();
@@ -182,40 +216,66 @@ const ProfileEditForm = () => {
       setSuccess(true);
       // Optionally redirect or show success message
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update profile");
+      console.warn("Update failed, trying fallback...", err);
+      // Fallback: If username has hyphens, check if replacing with spaces works
+      if (err.response?.status === 404 && username && username.includes("-")) {
+        try {
+          const fallbackUsername = username.replace(/-/g, " ");
+          console.log(`Retrying update with: ${fallbackUsername}`);
+
+          await axios.put(
+            `${API_BASE}/api/users/${fallbackUsername}`,
+            formData,
+            {
+              withCredentials: true,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          setSuccess(true);
+          return; // Success on fallback
+        } catch (retryErr) {
+          console.error("Fallback update failed:", retryErr);
+          setError(retryErr.response?.data?.message || "Failed to update profile");
+        }
+      } else {
+        setError(err.response?.data?.message || "Failed to update profile");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <GradientBackground className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="max-w-3xl mx-auto pt-32">
-        <div className="bg-black/50 backdrop-blur-sm border border-gray-800 rounded-lg shadow-xl">
+      <div className="max-w-3xl mx-auto pt-32 pb-20 px-4">
+        <div className="glass-card rounded-2xl shadow-xl overflow-hidden">
           {/* Form Header */}
-          <div className="p-6 border-b border-gray-800">
-            <h2 className="text-2xl font-bold text-white">Edit Profile</h2>
-            <p className="mt-1 text-gray-400">
+          <div className="p-8 border-b border-border/50">
+            <h2 className="text-3xl font-display font-bold text-text-main">Edit Profile</h2>
+            <p className="mt-2 text-text-muted">
               Update your profile information and social links
             </p>
           </div>
 
           {/* Form Content */}
-          <div className="p-6">
+          <div className="p-8">
             {error && (
-              <div className="mb-4 p-4 bg-red-500/10 border border-red-500 rounded-lg">
-                <p className="text-red-500">{error}</p>
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-red-600 text-sm font-medium">{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="mb-4 p-4 bg-green-500/10 border border-green-500 rounded-lg">
-                <p className="text-green-500">Profile updated successfully!</p>
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                <p className="text-green-600 text-sm font-medium">Profile updated successfully!</p>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <Input
                   label="Username"
@@ -336,7 +396,7 @@ const ProfileEditForm = () => {
                 <Input
                   label="Resume URL"
                   icon={FileCode}
-                  placeholder="Enter resume URL (optional)"
+                  placeholder="Link to PDF (e.g., Google Drive / Dropbox)"
                   value={formData.resumeUrl}
                   onChange={(e) =>
                     handleInputChange("resumeUrl", e.target.value)
@@ -347,7 +407,7 @@ const ProfileEditForm = () => {
                 <Input
                   label="Portfolio URL"
                   icon={Code}
-                  placeholder="Enter portfolio URL (optional)"
+                  placeholder="Your Personal Website / Portfolio"
                   value={formData.portfolioUrl}
                   onChange={(e) =>
                     handleInputChange("portfolioUrl", e.target.value)
@@ -358,7 +418,7 @@ const ProfileEditForm = () => {
                 <Input
                   label="GIF URL"
                   icon={Film}
-                  placeholder="Enter GIF URL (optional)"
+                  placeholder="Direct .gif link (e.g., from Tenor/Imgur)"
                   value={formData.gifUrl}
                   onChange={(e) => handleInputChange("gifUrl", e.target.value)}
                   error={formErrors.gifUrl}
@@ -367,7 +427,7 @@ const ProfileEditForm = () => {
                 <Input
                   label="Cover Picture URL"
                   icon={Image}
-                  placeholder="Enter Cover Picture URL (optional)"
+                  placeholder="Image URL (e.g., Unsplash source)"
                   value={formData.coverPhotoUrl}
                   onChange={(e) =>
                     handleInputChange("coverPhotoUrl", e.target.value)
@@ -378,7 +438,7 @@ const ProfileEditForm = () => {
                 <Input
                   label="Emoji"
                   icon={Sticker}
-                  placeholder="Enter Emoji (optional)"
+                  placeholder="Pick an emoji (e.g., 👨‍💻, 🚀)"
                   value={formData.emoji}
                   onChange={(e) => handleInputChange("emoji", e.target.value)}
                   error={formErrors.emoji}
@@ -395,7 +455,7 @@ const ProfileEditForm = () => {
 
               <button
                 type="submit"
-                className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                className="w-full py-4 bg-gradient-to-r from-accent to-orange-400 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
                 {loading ? "Updating..." : "Update Profile"}
@@ -404,7 +464,7 @@ const ProfileEditForm = () => {
           </div>
         </div>
       </div>
-    </GradientBackground>
+    </div>
   );
 };
 

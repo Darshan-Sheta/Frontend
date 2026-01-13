@@ -5,9 +5,10 @@ const NavItem = ({ to, children, icon, onClick }) => (
   <Link
     to={to}
     onClick={onClick}
-    className="flex items-center gap-2 text-lg text-gray-300 hover:text-blue-400 transition duration-300"
+    className="flex items-center gap-4 px-4 py-3 rounded-xl text-lg font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-300"
   >
-    {icon} {children}
+    <span className="text-xl">{icon}</span>
+    {children}
   </Link>
 );
 

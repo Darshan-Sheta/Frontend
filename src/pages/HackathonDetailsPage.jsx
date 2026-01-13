@@ -159,50 +159,56 @@ const HackathonDetailsPage = () => {
       <Navigation />
       <div className="min-h-screen container mx-auto px-4 py-12 flex flex-col md:flex-row gap-8 max-w-6xl p-4 pt-24">
         {/* Details Section */}
-        <div className="md:w-2/3 p-6 bg-gray-900 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20">
-          <div className="h-96 flex items-center justify-center">
+        <div className="md:w-2/3 p-8 glass-card border border-white/40 shadow-xl rounded-3xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+
+          <div className="h-80 md:h-96 flex items-center justify-center rounded-2xl overflow-hidden mb-8 shadow-sm border border-black/5 relative group">
+            <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors z-10"></div>
             <img
               src={hackathonData.logo}
               alt="Hackathon Visual"
-              className="w-full h-full object-cover opacity-90"
+              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
             />
           </div>
-          <h3 className="text-xl font-semibold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600 mt-4">
+
+          <h3 className="text-2xl font-display font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-accent to-orange-500">
             About the Hackathon
           </h3>
-          <p className="text-gray-300 leading-relaxed whitespace-pre-line">
+          <p className="text-text-main leading-relaxed whitespace-pre-line text-lg font-light tracking-wide">
             {hackathonData.about}
           </p>
         </div>
 
         {/* Sidebar */}
-        <div className="md:w-1/3 p-8 bg-gray-900 backdrop-blur-lg rounded-2xl text-white space-y-8 shadow-2xl border border-white/20 self-start sticky top-8">
+        <div className="md:w-1/3 p-8 glass-card border border-white/40 shadow-xl rounded-3xl space-y-8 self-start sticky top-24 relative overflow-hidden">
+          <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white/40 to-transparent pointer-events-none"></div>
+
           {/* Hackathon Title & Organization */}
           <div>
-            <h2 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
+            <h2 className="text-4xl font-display font-bold mb-2 text-text-main tracking-tight">
               {hackathonData.title}
             </h2>
-            <p className="text-gray-300 text-lg">
+            <p className="text-text-muted text-lg font-medium">
               {hackathonData.organization}
             </p>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 p-4 rounded-2xl bg-white/40 border border-white/50 shadow-sm">
             <Link to={`/dashboard/profile/${hackathonData.createdBy}`}>
               <img
                 src={`https://github.com/${hackathonData.createdBy}.png`}
                 alt="Uploaded by"
-                className="h-10 w-10 rounded-full border-2 border-white/30 hover:scale-105 transition-transform"
+                className="h-12 w-12 rounded-full border-2 border-white shadow-sm hover:scale-105 transition-transform"
               />
             </Link>
             <div>
-              <p className="font-semibold">Uploaded By</p>
-              <p className="text-gray-300 capitalize">{hackathonData.createdBy}</p>
+              <p className="font-bold text-text-main text-sm uppercase tracking-wider text-xs text-accent">Uploaded By</p>
+              <p className="text-text-main font-semibold capitalize">{hackathonData.createdBy}</p>
             </div>
 
             {username !== hackathonData.createdBy && (
               <button
-                className="ml-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition duration-200"
+                className="ml-auto px-5 py-2 bg-gradient-to-r from-accent to-orange-400 text-white rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all text-sm font-bold"
                 onClick={() => {
                   handleChatNow()
                 }}
@@ -215,11 +221,13 @@ const HackathonDetailsPage = () => {
 
           {/* Dates Section */}
           <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <Calendar className="text-blue-400" size={20} />
+            <div className="flex items-start space-x-4 group">
+              <div className="p-3 rounded-xl bg-blue-50 text-blue-500 group-hover:bg-blue-100 transition-colors">
+                <Calendar size={22} />
+              </div>
               <div>
-                <p className="font-semibold">Registration Period</p>
-                <p className="text-gray-300">
+                <p className="font-bold text-text-main text-sm">Registration Period</p>
+                <p className="text-text-muted text-sm mt-0.5">
                   {new Date(
                     hackathonData.registrationDates.start
                   ).toLocaleDateString()}{" "}
@@ -232,11 +240,13 @@ const HackathonDetailsPage = () => {
             </div>
 
             {hackathonData.hackathonDates && (
-              <div className="flex items-center space-x-4">
-                <Calendar className="text-blue-400" size={20} />
+              <div className="flex items-start space-x-4 group">
+                <div className="p-3 rounded-xl bg-purple-50 text-purple-500 group-hover:bg-purple-100 transition-colors">
+                  <Calendar size={22} />
+                </div>
                 <div>
-                  <p className="font-semibold">Hackathon Dates</p>
-                  <p className="text-gray-300">
+                  <p className="font-bold text-text-main text-sm">Hackathon Dates</p>
+                  <p className="text-text-muted text-sm mt-0.5">
                     {new Date(
                       hackathonData.hackathonDates.start
                     ).toLocaleDateString()}{" "}
@@ -251,65 +261,58 @@ const HackathonDetailsPage = () => {
           </div>
 
           {/* Team Information */}
-          <div className="space-y-6">
+          <div className="space-y-6 border-t border-border/30 pt-6">
             <div className="flex items-center space-x-4">
-              <Users className="text-purple-400" size={20} />
-              <div>
-                <p className="font-semibold">Team Composition</p>
-                <p className="text-gray-300">
-                  {`${hackathonData.teamSize.min}-${hackathonData.teamSize.max} members`}
-                </p>
+              <div className="p-2.5 rounded-full bg-accent/10 text-accent">
+                <Users size={18} />
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Users className="text-purple-400" size={20} />
-              <div>
-                <p className="font-semibold">Current Team Size</p>
-                <p className="text-gray-300">
-                  {hackathonData.currentTeamSize} members
-                </p>
+              <div className="flex-1">
+                <div className="flex justify-between items-center mb-1">
+                  <p className="font-bold text-text-main text-sm">Team Size</p>
+                  <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full font-bold">{hackathonData.teamSize.min}-{hackathonData.teamSize.max} Members</span>
+                </div>
+                {/* Progress bar visual for fun */}
+                <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-accent h-1.5 rounded-full" style={{ width: `${(hackathonData.currentTeamSize / hackathonData.teamSize.max) * 100}%` }}></div>
+                </div>
+                <p className="text-right text-xs text-text-muted mt-1">{hackathonData.currentTeamSize} Joined</p>
               </div>
             </div>
           </div>
 
           {/* Mode & Location */}
-          <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <Monitor className="text-green-400" size={20} />
-              <div>
-                <p className="font-semibold">Mode</p>
-                <p className="text-gray-300 capitalize">{hackathonData.mode}</p>
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50 text-center">
+              <Monitor className="text-green-500 mx-auto mb-2" size={24} />
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Mode</p>
+              <p className="text-text-main font-semibold capitalize">{hackathonData.mode}</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <Globe className="text-green-400" size={20} />
-              <div>
-                <p className="font-semibold">Location</p>
-                <p className="text-gray-300 capitalize">
-                  {hackathonData.location}
-                </p>
-              </div>
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50 text-center">
+              <Globe className="text-indigo-500 mx-auto mb-2" size={24} />
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Location</p>
+              <p className="text-text-main font-semibold capitalize truncate">
+                {hackathonData.location}
+              </p>
             </div>
           </div>
 
           {/* Team Members */}
           {hackathonData.acceptedUsers.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 border-b border-gray-700 pb-2">
-                <Users className="text-purple-400" size={20} />
-                <p className="text-lg font-semibold">Team Members</p>
+            <div className="space-y-4 pt-4">
+              <div className="flex items-center space-x-2 pb-2">
+                <p className="text-sm font-bold text-text-muted uppercase tracking-wider">Team Members</p>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-2">
                 {hackathonData.acceptedUsers.map((user) => (
-                  <div className="flex items-center space-x-4" key={user}>
+                  <div className="flex items-center space-x-3 p-2 hover:bg-white/50 rounded-xl transition-colors" key={user}>
                     <Link to={`/dashboard/profile/${user}`}>
                       <img
                         src={`https://github.com/${user}.png`}
                         alt={`${user}'s profile`}
-                        className="h-10 w-10 rounded-full border-2 border-white/30 hover:scale-105 transition-transform"
+                        className="h-8 w-8 rounded-full border border-white shadow-sm"
                       />
                     </Link>
-                    <p className="text-gray-300 capitalize">{user}</p>
+                    <p className="text-text-main font-medium text-sm capitalize">{user}</p>
                   </div>
                 ))}
               </div>
@@ -322,14 +325,14 @@ const HackathonDetailsPage = () => {
                 setText("send");
                 setVisible(false);
               }}
-              className="px-6 py-3 bg-blue-500 text-white rounded mt-24 w-full hover:bg-blue-600 transition-colors"
+              className="w-full py-4 bg-gradient-to-r from-accent to-orange-400 text-white rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all font-bold text-lg tracking-wide mt-4"
             >
-              Join Now
+              Join Now 🚀
             </button>
           )}
         </div>
       </div>
-      <Chatbot/>
+      <Chatbot />
     </GradientBackground>
   );
 };

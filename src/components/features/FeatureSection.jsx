@@ -10,12 +10,12 @@ const FeatureSection = ({ text }) => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-24"
         >
-          <h2 className="text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+          <h2 className="text-4xl md:text-5xl font-display font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-accent to-orange-400">
             {text}
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto mt-8">
+          <p className="text-xl text-text-muted max-w-2xl mx-auto leading-relaxed">
             Kick off your journey with TeamBond — join challenges, showcase your skills, and discover your ideal coding partner!
           </p>
         </motion.div>

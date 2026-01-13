@@ -16,13 +16,16 @@ import HackathonCandidatePage from '../pages/HackathonCandidatePage';
 import ChatDropDown from '../components/Chat/ChatDropDown';
 import ProtectedRoute from '../context/ProtectedRoutes';
 import { useAuth } from '../context/AuthContext';
+import SecurityInitializer from '../components/SecurityInitializer';
 import UserFetcherOnRouteChange from '../context/UserFetchOnRouteChange';
+
 function AppRoutes() {
     const { userId, status } = useAuth();
     return (
 
         <Router>
             <UserFetcherOnRouteChange />
+            <SecurityInitializer />
             <Routes>
                 <Route path="/register" element={<RegistrationForm />} />
                 <Route

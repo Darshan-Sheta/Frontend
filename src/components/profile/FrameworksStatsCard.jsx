@@ -4,30 +4,30 @@ import { useAuth } from '../../context/AuthContext';
 import { useParams } from 'react-router-dom';
 
 const COLORS = [
-  'bg-indigo-500','bg-green-500','bg-yellow-400','bg-red-500',
-  'bg-blue-500','bg-pink-500','bg-purple-500','bg-teal-500',
-  'bg-pink-400','bg-amber-500','bg-sky-500','bg-violet-400'
+  'bg-indigo-500', 'bg-green-500', 'bg-yellow-400', 'bg-red-500',
+  'bg-blue-500', 'bg-pink-500', 'bg-purple-500', 'bg-teal-500',
+  'bg-pink-400', 'bg-amber-500', 'bg-sky-500', 'bg-violet-400'
 ];
 
 const FrameworksStatsCard = () => {
   const { username } = useParams();
-  const [frameworks, setFrameworks] = useState([]); 
+  const [frameworks, setFrameworks] = useState([]);
 
   useEffect(() => {
     async function load() {
       if (!username) return;
       const data = await getUserFrameworks(username);
       console.log(data);
-      if(data?.error){
-          console.log(data.error);
-          
-      }else{
+      if (data?.error) {
+        console.log(data.error);
+
+      } else {
         if (data && typeof data === 'object') {
-        const arr = Object.entries(data)
-          .map(([name, val]) => ({ name, value: val }))
-          .sort((a, b) => b.value - a.value); // ← sort descending
-        setFrameworks(arr);
-      }
+          const arr = Object.entries(data)
+            .map(([name, val]) => ({ name, value: val }))
+            .sort((a, b) => b.value - a.value); // ← sort descending
+          setFrameworks(arr);
+        }
       }
     }
     load();
@@ -35,52 +35,54 @@ const FrameworksStatsCard = () => {
 
   const total = frameworks.reduce((sum, f) => sum + f.value, 0) || 1;
 
-    if (!frameworks.length) {
+  if (!frameworks.length) {
     return (
-      <div className="bg-gray-900 rounded-2xl p-6 shadow-lg transition duration-300 backdrop-blur-md border border-gray-700 text-center">
-        <h3 className="text-2xl font-bold text-blue-400 mb-4">
-          Frameworks in Top Repos
+      <div className="glass-card rounded-2xl p-6 text-center h-full flex flex-col justify-center items-center">
+        <h3 className="text-xl font-display font-bold text-white mb-2">
+          Frameworks
         </h3>
-        <p className="text-gray-400">
-          No frameworks detected in your top repositories.
+        <p className="text-slate-400 text-sm">
+          No frameworks detected in top repositories.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-900 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition duration-300 backdrop-blur-md border border-gray-700">
-      <h3 className="text-2xl font-bold text-blue-400 mb-4">
-        Frameworks in Top Repos
+    <div className="glass-card rounded-2xl p-6 h-full my-20">
+      <h3 className="text-xl font-display font-bold text-white mb-6 flex items-center gap-2">
+        <span className="w-1 h-6 bg-gradient-to-b from-fuchsia-500 to-pink-500 rounded-full"></span>
+        Frameworks
       </h3>
 
       {/* Stacked Bar */}
-      <div className="flex h-2 w-full rounded-full overflow-hidden mb-6">
+      <div className="flex h-3 w-full rounded-full overflow-hidden mb-8 bg-surface/50 border border-white/5">
         {frameworks.map((fw, i) => (
           <div
             key={fw.name}
-            className={COLORS[i % COLORS.length]}
+            className={`${COLORS[i % COLORS.length]} opacity-80 hover:opacity-100 transition-opacity cursor-pointer`}
             style={{ flex: fw.value }}
+            title={`${fw.name}: ${((fw.value / total) * 100).toFixed(1)}%`}
           />
         ))}
       </div>
 
       {/* Legend */}
-      <div className="space-y-2">
-        { frameworks.length >0 && frameworks.map((fw, i) => {
+      <div className="space-y-3">
+        {frameworks.length > 0 && frameworks.map((fw, i) => {
           const pct = ((fw.value / total) * 100).toFixed(1);
           return (
             <div
               key={fw.name}
-              className="flex items-center justify-between text-gray-300"
+              className="flex items-center justify-between text-slate-400 text-sm border-b border-white/5 pb-2 last:border-0"
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <span
-                  className={`inline-block w-3 h-3 rounded-full ${COLORS[i % COLORS.length]}`}
+                  className={`inline-block w-2.5 h-2.5 rounded-full shadow-lg shadow-white/10 ${COLORS[i % COLORS.length]}`}
                 />
-                <span>{fw.name}</span>
+                <span className="font-medium">{fw.name}</span>
               </div>
-              <span className="font-medium text-white">{pct}%</span>
+              <span className="font-semibold text-slate-200">{pct}%</span>
             </div>
           );
         })}

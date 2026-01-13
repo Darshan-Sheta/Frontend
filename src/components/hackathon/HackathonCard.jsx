@@ -37,7 +37,7 @@ const HackathonCard = ({
 
   let buttonContent;
   let buttonStyle =
-    "px-6 py-3 text-white font-bold rounded-lg transition-all duration-300 transform shadow-lg";
+    "px-6 py-3 text-white font-bold rounded-xl transition-all duration-300 transform shadow-lg";
   let linkTo = `/dashboard/hackathons/${id}`;
 
   if (
@@ -49,7 +49,7 @@ const HackathonCard = ({
     teamSize.max !== currentTeamSize
   ) {
     buttonContent = "Join Now 🚀";
-    buttonStyle += " bg-blue-500 hover:bg-blue-600 hover:scale-105";
+    buttonStyle += " bg-accent hover:bg-accent/80 hover:scale-105";
   } else if (hasRequested && !isRequestAccepted && !isRequestRejected) {
     buttonContent = "Request Pending... ⏱️";
     buttonStyle += " bg-yellow-500";
@@ -63,103 +63,92 @@ const HackathonCard = ({
     buttonContent = "Hackathon Full! 🚫";
     buttonStyle += " bg-red-500";
   } else if (isCreatedByUser) {
-    buttonContent = "View Your Post 📝";
-    buttonStyle += " bg-gray-500";
     buttonContent = "View Details 📝";
-    buttonStyle += " bg-gray-500";
+    buttonStyle += " bg-accent hover:bg-accent/80 hover:scale-105";
   }
 
   if (type === "my-hackathons") {
     buttonContent = "AI Suggest 🤖";
-    buttonStyle = "px-6 py-3 text-white font-bold rounded-lg transition-all duration-300 transform shadow-lg bg-purple-600 hover:bg-purple-700 hover:scale-105";
+    buttonStyle = "px-6 py-3 text-white font-bold rounded-xl transition-all duration-300 transform shadow-lg bg-accent hover:bg-accent/80 hover:scale-105";
     linkTo = `/dashboard/hackathon-requests/${id}`;
   }
 
   return (
-    <div className="relative bg-gray-900 border border-white/20 shadow-lg p-6 rounded-2xl text-white transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl flex flex-col md:flex-row items-center overflow-hidden">
-      {/* Background Image */}
-      {logo && (
-        <div className="absolute inset-0">
-          <img src={logo} alt={title} className="w-full h-full object-cover" />
-          {/* Left Fade Effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-900/110 via-gray-900/80 to-gray-900/35"></div>
-        </div>
-      )}
+    <div className="relative bg-white border border-gray-200 shadow-lg p-0 rounded-2xl text-text-main transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl flex flex-col md:flex-row items-stretch overflow-hidden group">
+
 
       {/* Content */}
-      <div className="relative z-10 flex-1 p-4">
-        <h3 className="text-2xl font-bold mb-2">{title}</h3>
-        <div className="space-y-2 text-sm">
-          <p className="flex items-center">
-            <FaBuilding className="mr-2 text-blue-400" />{" "}
-            <span className="font-semibold">Organization: {organization}</span>
+      <div className="relative z-10 flex-1 p-6 flex flex-col justify-center">
+        {/* Title and Header */}
+        <div className="mb-4">
+          <h3 className="text-3xl font-display font-bold mb-2 text-text-main drop-shadow-sm tracking-wide">{title}</h3>
+          <div className="h-1 w-20 bg-gradient-to-r from-accent to-orange-400 rounded-full"></div>
+        </div>
+
+        <div className="space-y-3 text-sm">
+          <p className="flex items-center text-text-muted drop-shadow-sm">
+            <FaBuilding className="mr-3 text-blue-500 text-lg flex-shrink-0" />{" "}
+            <span className="font-medium tracking-wide">Organization: <span className="text-text-main font-bold">{organization}</span></span>
           </p>
-          <p className="flex items-center">
-            <FaLaptopCode className="mr-2 text-green-400" />{" "}
-            <span className="font-semibold">Theme: {theme}</span>
+          <p className="flex items-center text-text-muted drop-shadow-sm">
+            <FaLaptopCode className="mr-3 text-green-500 text-lg flex-shrink-0" />{" "}
+            <span className="font-medium tracking-wide">Theme: <span className="text-text-main font-bold">{theme}</span></span>
           </p>
 
-          {/* <p className="flex items-center">
-            <FaCalendarAlt className="mr-2 text-yellow-400" />
-            Registration Starts:{" "}
-            <span className="ml-1">
-              {new Date(registrationDates.start).toLocaleDateString()}
-            </span>
-          </p>
-          <p className="flex items-center">
-            <FaCalendarAlt className="mr-2 text-red-400" />
-            Registration Ends:{" "}
-            <span className="ml-1">
-              {new Date(registrationDates.end).toLocaleDateString()}
-            </span>
-          </p> */}
-          <p className="flex items-center font-semibold">
-            <FaCalendarAlt className="mr-2 text-blue-400" />
-            Registration Period:{" "}
-            <span className="ml-1 font-semibold">
-              {new Date(registrationDates.start).toLocaleDateString()} -{" "}
-              {new Date(registrationDates.end).toLocaleDateString()}
+          <p className="flex items-center text-text-muted drop-shadow-sm">
+            <FaCalendarAlt className="mr-3 text-blue-500 text-lg flex-shrink-0" />
+            <span className="font-medium">
+              Registration:{" "}
+              <span className="text-text-main font-bold">
+                {new Date(registrationDates.start).toLocaleDateString()} -{" "}
+                {new Date(registrationDates.end).toLocaleDateString()}
+              </span>
             </span>
           </p>
 
           {hackathonDates && (
-            <p className="flex items-center font-semibold">
-              <FaCalendarAlt className="mr-2 text-blue-400" />
-              Hackathon Dates:{" "}
-              <span className="ml-1 font-semibold">
-                {new Date(hackathonDates.start).toLocaleDateString()} -{" "}
-                {new Date(hackathonDates.end).toLocaleDateString()}
+            <p className="flex items-center text-text-muted drop-shadow-sm">
+              <FaCalendarAlt className="mr-3 text-purple-500 text-lg flex-shrink-0" />
+              <span className="font-medium">
+                Hackathon:{" "}
+                <span className="text-text-main font-bold">
+                  {new Date(hackathonDates.start).toLocaleDateString()} -{" "}
+                  {new Date(hackathonDates.end).toLocaleDateString()}
+                </span>
               </span>
             </p>
           )}
 
-          <p className="flex items-center font-semibold">
-            <FaMapMarkerAlt className="mr-2 text-purple-400" />{" "}
-            <span className="font-semibold">
-              {location}, Mode: {mode}
+          <p className="flex items-center text-text-muted drop-shadow-sm">
+            <FaMapMarkerAlt className="mr-3 text-red-500 text-lg flex-shrink-0" />{" "}
+            <span className="font-medium">
+              {location} <span className="mx-2">•</span> Mode: <span className="uppercase font-bold tracking-wider text-xs bg-gray-100 text-text-main px-2 py-0.5 rounded">{mode}</span>
             </span>
           </p>
 
-          <p className="flex items-center">
-            <FaUser className="mr-2 text-gray-400" />{" "}
-            <span className="font-semibold">{createdBy}</span>
-          </p>
+          <div className="flex items-center gap-6 mt-2">
+            <p className="flex items-center text-text-muted text-xs">
+              <FaUser className="mr-2 text-gray-400" />{" "}
+              <span>{createdBy}</span>
+            </p>
 
-          <p className="flex items-center">
-            <FaUser className="mr-2 text-gray-400" />{" "}
-            <span className="font-semibold">
-              Team Size: {currentTeamSize}/{teamSize.max}
-            </span>
-          </p>
+            <p className="flex items-center text-text-muted text-xs">
+              <FaUser className="mr-2 text-gray-400" />{" "}
+              <span>
+                Team: {currentTeamSize}/{teamSize.max}
+              </span>
+            </p>
+          </div>
         </div>
+
         {techStacks && techStacks.length > 0 && (
-          <div className="mt-4">
-            <p className="font-semibold mb-2">Tech Stacks:</p>
+          <div className="mt-5">
+            <p className="font-semibold mb-2 text-xs uppercase tracking-wider text-text-muted">Tech Stacks</p>
             <div className="flex flex-wrap gap-2">
               {techStacks.map((tech, index) => (
                 <span
                   key={index}
-                  className="bg-white/10 border border-white/20 px-3 py-1 text-sm rounded-full"
+                  className="bg-gray-100 border border-gray-200 text-text-main px-3 py-1 text-xs rounded-lg shadow-sm hover:bg-gray-200 transition-colors"
                 >
                   {tech}
                 </span>
@@ -167,10 +156,11 @@ const HackathonCard = ({
             </div>
           </div>
         )}
+
         {/* Join Now Button */}
-        <div className="mt-6">
+        <div className="mt-6 pt-4 border-t border-gray-200">
           <Link to={linkTo}>
-            <button className={buttonStyle}>{buttonContent}</button>
+            <button className={`${buttonStyle} shadow-xl hover:shadow-2xl ring-1 ring-black/5`}>{buttonContent}</button>
           </Link>
         </div>
       </div>
