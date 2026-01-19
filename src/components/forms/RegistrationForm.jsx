@@ -15,7 +15,7 @@ import { ensureBrowserKeys } from "../../config/keyManagement";
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 const RegistrationForm = () => {
-  const { username, userId } = useAuth();
+  const { username, userId, fetchUser } = useAuth();
   // const features = [
   //   "Real-time Group Chats",
   //   "Hackathon Team Formation",
@@ -119,6 +119,9 @@ const RegistrationForm = () => {
         console.error("Failed to backup initial private key:", backupErr);
         // We don't block registration success, but this is a risk
       }
+
+      // 6. Refresh Auth Context
+      await fetchUser();
 
       setSuccess(true);
 
