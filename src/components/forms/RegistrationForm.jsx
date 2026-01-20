@@ -247,7 +247,7 @@ const RegistrationForm = () => {
           )}
 
           <div className="mb-8 p-5 bg-blue-50 border border-blue-100 rounded-xl text-blue-800 text-sm leading-relaxed text-center">
-            During registration, you'll need to select a directory for your personal secure chats, which rely on end-to-end encryption. This directory will safely store your private key. Please avoid modifying this directory. <br /> In case of loss, email <a href="mailto:codeamigoes7@gmail.com" className="underline font-semibold hover:text-blue-900">codeamigoes7@gmail.com</a>.
+            During registration, you'll need to select a directory for your personal secure chats, which rely on end-to-end encryption. This directory will safely store your private key. Please avoid modifying this directory. <br /> In case of loss, email <a href="mailto:teambond@gmail.com" className="underline font-semibold hover:text-blue-900">teambond@gmail.com</a>.
           </div>
 
           <form
