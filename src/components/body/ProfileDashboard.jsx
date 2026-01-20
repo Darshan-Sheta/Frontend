@@ -305,13 +305,17 @@ const ProfileDashboard = () => {
 
             {/* AI Analysis / GitJudge (Left) */}
             <div className="flex flex-col gap-6">
-              <div className="glass-card rounded-2xl p-6 h-full border border-white/10 flex flex-col justify-center">
-                {userData?.githubUsername ? (
-                  <GitJudgeProfile username={userData.githubUsername} githubData={githubData} isSidebar={false} />
-                ) : (
-                  <div className="text-center text-gray-500">AI Analysis Unavailable</div>
-                )}
-              </div>
+              {!success ? (
+                <CardShimmer />
+              ) : (
+                <div className="glass-card rounded-2xl p-6 h-full border border-white/10 flex flex-col justify-center">
+                  {userData?.githubUsername ? (
+                    <GitJudgeProfile username={userData.githubUsername} githubData={githubData} isSidebar={false} />
+                  ) : (
+                    <div className="text-center text-gray-500">AI Analysis Unavailable</div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* LeetCode Stats Card (Right) */}
