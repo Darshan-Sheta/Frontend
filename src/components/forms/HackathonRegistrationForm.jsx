@@ -149,6 +149,8 @@ const HackathonRegistrationForm = () => {
     try {
       const response = await axios.post(`${API_BASE}/api/hackathons/generate-details`, {
         description: genAiPrompt
+      }, {
+        withCredentials: true
       });
       const data = response.data;
 
