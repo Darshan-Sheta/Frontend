@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
 
     const fetchUser = () => {
         setLoading(true);
-        axios.get(`${API_BASE}/api/users/me`, {
+        return axios.get(`${API_BASE}/api/users/me`, {
             withCredentials: true
         })
             .then((res) => setUser(res.data))
@@ -35,7 +35,7 @@ export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) throw new Error("useAuth must be used within an AuthProvider");
 
-    const { user, setUser, loading } = context;
+    const { user, setUser, loading, fetchUser } = context;
 
     // console.log(user);
 
@@ -52,6 +52,8 @@ export const useAuth = () => {
         status,
         email,
         loading,
-        user
+        loading,
+        user,
+        fetchUser
     };
 };
