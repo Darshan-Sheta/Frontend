@@ -76,7 +76,7 @@ const HackathonCandidatePage = () => {
     return (
         <GradientBackground className="min-h-screen">
             <Navigation />
-            <div className="container mx-auto px-4 pt-24 pb-12 max-w-7xl my-200">
+            <div className="container mx-auto px-4 pt-24 pb-12 max-w-7xl">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <button onClick={() => navigate(-1)} className="flex items-center text-text-muted hover:text-accent transition font-medium">

@@ -193,13 +193,29 @@ const PersonalChatChat = ({ memberId, memberName, isKeySetupComplete }) => {
             newMsg.content = '[Decryption Failed]';
           }
 
-          // Check for duplicates (same sender, same timestamp within 1 second)
+          // Check for matching optimistic message first
           setMessages((prev) => {
+            const optimisticIndex = prev.findIndex(
+              (msg) =>
+                msg.isOptimistic &&
+                msg.sender === newMsg.sender &&
+                msg.content === newMsg.content
+            );
+
+            if (optimisticIndex !== -1) {
+              console.log("✅ Replacing optimistic message with server confirmation");
+              const updated = [...prev];
+              updated[optimisticIndex] = newMsg;
+              return updated;
+            }
+
+            // Fallback duplicate check
             const isDuplicate = prev.some(
               (msg) =>
+                !msg.isOptimistic && // Don't match optimistic ones here, we handled them above
                 msg.sender === newMsg.sender &&
                 msg.content === newMsg.content &&
-                Math.abs(new Date(msg.timestamp).getTime() - new Date(newMsg.timestamp).getTime()) < 1000
+                Math.abs(new Date(msg.timestamp).getTime() - new Date(newMsg.timestamp).getTime()) < 2000
             );
 
             if (isDuplicate) {
@@ -289,7 +305,8 @@ const PersonalChatChat = ({ memberId, memberName, isKeySetupComplete }) => {
       const optimisticMsg = {
         sender: currentUser,
         content: messageText,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        isOptimistic: true // Mark as optimistic
       };
 
       setMessages((prev) => [...prev, optimisticMsg]);
