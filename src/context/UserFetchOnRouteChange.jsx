@@ -8,7 +8,7 @@ const UserFetcherOnRouteChange = () => {
     const { fetchUser } = useContext(AuthContext);
 
     useEffect(() => {
-        fetchUser();
+        fetchUser(true);
     }, [location.pathname]);
 
     return null;
