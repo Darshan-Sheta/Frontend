@@ -76,14 +76,6 @@ const ProfileLeftColumn = ({
                                 {userData.location}
                             </div>
                         )}
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/50 border border-black/5 text-xs text-slate-600 font-medium">
-                            <FaEye className="text-blue-500" />
-                            <img
-                                src={`https://profile-counter.glitch.me/${userData.githubUsername}/count.svg`}
-                                className="h-3 filter brightness-0 opacity-70"
-                                alt="views"
-                            />
-                        </div>
                     </div>
 
                     {/* Stats Grid */}
