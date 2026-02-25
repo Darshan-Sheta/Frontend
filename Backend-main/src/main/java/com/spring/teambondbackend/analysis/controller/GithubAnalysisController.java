@@ -26,52 +26,63 @@ public class GithubAnalysisController {
         try {
             // First, check if analysis exists in database
             Optional<User> userOpt = userRepository.findByGithubUsername(username);
-            
-            if (userOpt.isPresent() && userOpt.get().getGeminiAnalysis() != null 
+
+            if (userOpt.isPresent() && userOpt.get().getGeminiAnalysis() != null
                     && !userOpt.get().getGeminiAnalysis().trim().isEmpty()) {
                 // Return cached analysis from database
                 System.out.println("Returning cached Gemini analysis for: " + username);
                 DeveloperEvaluation cachedEval = objectMapper.readValue(
-                    userOpt.get().getGeminiAnalysis(), 
-                    DeveloperEvaluation.class
-                );
+                        userOpt.get().getGeminiAnalysis(),
+                        DeveloperEvaluation.class);
+
+                // Check for Stale-While-Revalidate (e.g., refresh if older than 5 minutes)
+                java.util.Date lastDate = userOpt.get().getLastAnalysisDate();
+                long fiveMinutesInMillis = 5 * 60 * 1000;
+                boolean isStale = lastDate == null
+                        || (new java.util.Date().getTime() - lastDate.getTime() > fiveMinutesInMillis);
+
+                if (isStale) {
+                    System.out.println("⏳ Analysis is stale (older than 5 mins). Triggering background refresh...");
+                    githubAnalysisService.refreshAnalysisAsync(username, userRepository);
+                }
+
                 return ResponseEntity.ok(cachedEval);
             }
 
             // If not found in DB, generate new analysis
             System.out.println("Generating new Gemini analysis for: " + username);
             DeveloperEvaluation evaluation = githubAnalysisService.analyzeDeveloper(username);
-            
+
             // Store in database if user exists
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 String analysisJson = objectMapper.writeValueAsString(evaluation);
                 user.setGeminiAnalysis(analysisJson);
+                user.setLastAnalysisDate(new java.util.Date());
                 userRepository.save(user);
                 System.out.println("Stored Gemini analysis in database for: " + username);
 
-                 // Also update Framework Stats for Recommendations
-                 if (user.getGithubAccessToken() != null && !user.getGithubAccessToken().isEmpty()) {
-                     try {
-                         com.spring.teambondbackend.recommendation.dtos.GithubScoreRequest scoreRequest = 
-                             new com.spring.teambondbackend.recommendation.dtos.GithubScoreRequest();
-                         scoreRequest.setUsername(user.getUsername());
-                         scoreRequest.setEmail(user.getEmail());
-                         scoreRequest.setAccessToken(user.getGithubAccessToken());
-                         
-                         // Run asynchronously or directly? Directly for now to ensure it completes.
-                         System.out.println("Triggering Framework Analysis for: " + username);
-                         frameworkAnalysisService.analyseUserFrameworkStats(scoreRequest);
-                         System.out.println("Framework Analysis completed for: " + username);
-                     } catch (Exception e) {
-                         System.err.println("Failed to update framework stats: " + e.getMessage());
-                         // Don't fail the whole request, just log
-                     }
-                 } else {
-                     System.out.println("Skipping Framework Analysis - No Access Token for: " + username);
-                 }
+                // Also update Framework Stats for Recommendations
+                if (user.getGithubAccessToken() != null && !user.getGithubAccessToken().isEmpty()) {
+                    try {
+                        com.spring.teambondbackend.recommendation.dtos.GithubScoreRequest scoreRequest = new com.spring.teambondbackend.recommendation.dtos.GithubScoreRequest();
+                        scoreRequest.setUsername(user.getUsername());
+                        scoreRequest.setEmail(user.getEmail());
+                        scoreRequest.setAccessToken(user.getGithubAccessToken());
+
+                        // Run asynchronously or directly? Directly for now to ensure it completes.
+                        System.out.println("Triggering Framework Analysis for: " + username);
+                        frameworkAnalysisService.analyseUserFrameworkStats(scoreRequest);
+                        System.out.println("Framework Analysis completed for: " + username);
+                    } catch (Exception e) {
+                        System.err.println("Failed to update framework stats: " + e.getMessage());
+                        // Don't fail the whole request, just log
+                    }
+                } else {
+                    System.out.println("Skipping Framework Analysis - No Access Token for: " + username);
+                }
             }
-            
+
             return ResponseEntity.ok(evaluation);
         } catch (Exception e) {
             e.printStackTrace();

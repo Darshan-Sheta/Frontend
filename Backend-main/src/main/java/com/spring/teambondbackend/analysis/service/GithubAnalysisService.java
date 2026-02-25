@@ -45,6 +45,28 @@ public class GithubAnalysisService {
         return callGemini(prompt);
     }
 
+    @org.springframework.scheduling.annotation.Async
+    public void refreshAnalysisAsync(String username,
+            com.spring.teambondbackend.registration.repository.UserRepository userRepository) {
+        try {
+            System.out.println("🔄 Async Refresh started for: " + username);
+            DeveloperEvaluation evaluation = analyzeDeveloper(username);
+
+            Optional<com.spring.teambondbackend.registration.model.User> userOpt = userRepository
+                    .findByGithubUsername(username);
+            if (userOpt.isPresent()) {
+                com.spring.teambondbackend.registration.model.User user = userOpt.get();
+                String analysisJson = objectMapper.writeValueAsString(evaluation);
+                user.setGeminiAnalysis(analysisJson);
+                user.setLastAnalysisDate(new Date());
+                userRepository.save(user);
+                System.out.println("✅ Async Refresh completed & saved for: " + username);
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Async Refresh failed for " + username + ": " + e.getMessage());
+        }
+    }
+
     private Map<String, Object> fetchGithubData(String username) {
         String userUrl = "https://api.github.com/users/" + username;
         String reposUrl = "https://api.github.com/users/" + username + "/repos?per_page=40&sort=updated";

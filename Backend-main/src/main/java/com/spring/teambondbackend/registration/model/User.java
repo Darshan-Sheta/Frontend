@@ -71,6 +71,8 @@ public class User {
     // structure
     private String geminiAnalysis; // JSON string of DeveloperEvaluation
 
+    private java.util.Date lastAnalysisDate; // Track when analysis was last updated
+
     // evaluate false
     public void evaluateProfileCompletion() {
         boolean complete = this.username != null && !this.username.trim().isEmpty() &&

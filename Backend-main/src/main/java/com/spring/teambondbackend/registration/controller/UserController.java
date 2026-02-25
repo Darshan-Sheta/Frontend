@@ -12,6 +12,7 @@ import com.spring.teambondbackend.registration.dto.CodeChefStatsDto;
 import com.spring.teambondbackend.registration.service.CodeforcesScraperService;
 import com.spring.teambondbackend.registration.dto.CodeforcesStatsDto;
 import com.spring.teambondbackend.registration.service.UserService;
+import com.spring.teambondbackend.registration.service.LeetCodeService;
 import com.spring.teambondbackend.analysis.service.GithubAnalysisService;
 import com.spring.teambondbackend.analysis.dto.DeveloperEvaluation;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,6 +69,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final CodeChefScraperService codeChefScraperService;
     private final CodeforcesScraperService codeforcesScraperService;
+    private final LeetCodeService leetCodeService;
     private final GithubAnalysisService githubAnalysisService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -525,6 +527,15 @@ public class UserController {
     @GetMapping("/ping")
     public ResponseEntity<String> ping() {
         return ResponseEntity.ok("ping");
+    }
+
+    @GetMapping("/leetcode/{username}")
+    public ResponseEntity<?> getLeetCodeStats(@PathVariable String username) {
+        try {
+            return ResponseEntity.ok(leetCodeService.getStats(username));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching LeetCode stats: " + e.getMessage());
+        }
     }
 
     @GetMapping("/codechef/{username}")
