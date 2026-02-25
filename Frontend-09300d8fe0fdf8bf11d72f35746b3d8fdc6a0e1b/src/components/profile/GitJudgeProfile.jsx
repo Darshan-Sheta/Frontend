@@ -11,19 +11,44 @@ const GitJudgeProfile = ({ username, githubData, isSidebar = false }) => {
     const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
     useEffect(() => {
-        if (username) {
-            setLoading(true);
-            setError(null);
+        let isMounted = true;
+
+        const fetchAnalysis = (isBackground = false) => {
+            if (!isBackground) {
+                setLoading(true);
+                setError(null);
+            }
+
             axios.get(`${API_BASE}/api/analysis/github/${username}`, { withCredentials: true })
                 .then(res => {
-                    setAnalysis(res.data);
-                    setLoading(false);
+                    if (isMounted) {
+                        setAnalysis(res.data);
+                        setLoading(false);
+                    }
                 })
                 .catch(err => {
                     // console.error("Analysis Error:", err);
-                    setError(err.response?.data || "Failed to generate AI analysis.");
-                    setLoading(false);
+                    if (isMounted) {
+                        setError(err.response?.data || "Failed to generate AI analysis.");
+                        setLoading(false);
+                    }
                 });
+        };
+
+        if (username) {
+            // 1. Initial Fetch
+            fetchAnalysis();
+
+            // 2. Poll after 10 seconds to check for updates (Stale-While-Revalidate)
+            const timer = setTimeout(() => {
+                console.log("Polling for fresh AI analysis...");
+                fetchAnalysis(true); // true = quiet update (no loading spinner)
+            }, 10000);
+
+            return () => {
+                isMounted = false;
+                clearTimeout(timer);
+            };
         }
     }, [username]);
 

@@ -200,7 +200,8 @@ const ProfileDashboard = () => {
       if (userData.leetcodeUsername) {
         axios
           .get(
-            `https://leetcode-stats-api.herokuapp.com/${userData.leetcodeUsername}`
+            `${API_BASE}/api/users/leetcode/${userData.leetcodeUsername}`,
+            { withCredentials: true }
           )
           .then((response) => setLeetcodeData(response.data))
           .catch((error) => {

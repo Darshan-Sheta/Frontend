@@ -9,14 +9,16 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchUser = () => {
-        setLoading(true);
+    const fetchUser = (silent = false) => {
+        if (!silent) setLoading(true);
         return axios.get(`${API_BASE}/api/users/me`, {
             withCredentials: true
         })
             .then((res) => setUser(res.data))
             .catch(() => setUser(null))
-            .finally(() => setLoading(false));
+            .finally(() => {
+                if (!silent) setLoading(false);
+            });
     };
 
     useEffect(() => {
