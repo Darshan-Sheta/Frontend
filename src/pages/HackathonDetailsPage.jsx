@@ -19,6 +19,7 @@ const HackathonDetailsPage = () => {
   const [hackathonData, setHackathonData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
+  const [loadError, setLoadError] = useState(null); // store fetch error message
 
   // ---------------- FETCH DATA ----------------
   useEffect(() => {
@@ -31,9 +32,12 @@ const HackathonDetailsPage = () => {
 
         setHackathonData(response.data);
       } catch (error) {
-        console.log(error);
-        toast.error("Failed to load hackathon");
-        navigate("/dashboard/hackathons");
+        console.error("Error fetching hackathon details:", error);
+        const message =
+          error.response?.data?.message || "Failed to load hackathon";
+        toast.error(message);
+        setLoadError(message);
+        // don't automatically navigate away; allow user to see error or retry
       } finally {
         setLoading(false);
       }
@@ -113,8 +117,30 @@ const HackathonDetailsPage = () => {
     );
   }
 
-  if (!hackathonData) return null;
+  if (loadError) {
+    // show simple error message instead of redirecting
+    return (
+      <GradientBackground>
+        <ToastContainer />
+        <Navigation />
+        <div className="min-h-screen flex items-center justify-center text-white text-2xl">
+          {loadError}
+        </div>
+      </GradientBackground>
+    );
+  }
 
+  if (!hackathonData) {
+    return (
+      <GradientBackground>
+        <Navigation />
+        <div className="min-h-screen flex flex-col items-center justify-center text-white text-xl">
+          <p>Error: Hackathon data could not be retrieved or is empty.</p>
+          <Link to="/dashboard/hackathons" className="mt-4 px-4 py-2 bg-accent rounded-xl">Go Back</Link>
+        </div>
+      </GradientBackground>
+    );
+  }
   return (
     <GradientBackground>
       <ToastContainer />
