@@ -10,6 +10,7 @@ import React, { use } from "react";
 import { useAuth } from "../../context/AuthContext";
 const HackathonCard = ({
   id,
+  _id,
   title,
   organization,
   theme,
@@ -37,8 +38,9 @@ const HackathonCard = ({
 
   let buttonContent;
   let buttonStyle =
-    "px-6 py-3 text-white font-bold rounded-xl transition-all duration-300 transform shadow-lg";
-  let linkTo = `/dashboard/hackathons/${id}`;
+    "px-6 py-3 text-white font-bold rounded-xl transition-all duration-300 transform shadow-lg text-center block w-full";
+  let hackathonId = id || _id || "";
+  let linkTo = `/dashboard/hackathons/${hackathonId}`;
 
   if (
     joinable &&
@@ -69,8 +71,8 @@ const HackathonCard = ({
 
   if (type === "my-hackathons") {
     buttonContent = "AI Suggest 🤖";
-    buttonStyle = "px-6 py-3 text-white font-bold rounded-xl transition-all duration-300 transform shadow-lg bg-accent hover:bg-accent/80 hover:scale-105";
-    linkTo = `/dashboard/hackathon-requests/${id}`;
+    buttonStyle = "px-6 py-3 text-white font-bold rounded-xl transition-all duration-300 transform shadow-lg bg-accent hover:bg-accent/80 hover:scale-105 block text-center";
+    linkTo = `/dashboard/hackathon-requests/${hackathonId}`;
   }
 
   return (
@@ -159,8 +161,8 @@ const HackathonCard = ({
 
         {/* Join Now Button */}
         <div className="mt-6 pt-4 border-t border-gray-200">
-          <Link to={linkTo}>
-            <button className={`${buttonStyle} shadow-xl hover:shadow-2xl ring-1 ring-black/5`}>{buttonContent}</button>
+          <Link to={linkTo} className={`${buttonStyle} shadow-xl hover:shadow-2xl ring-1 ring-black/5`}>
+            {buttonContent}
           </Link>
         </div>
       </div>
