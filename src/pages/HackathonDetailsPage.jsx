@@ -59,13 +59,17 @@ const HackathonDetailsPage = () => {
       } catch (err) {
         setError(err.message);
         console.log("Error fetching hackathon data:", err);
-
-        navigate("/dashboard");
         setLoading(false);
+        // Only redirect if 404 or 403, not on all errors
+        if (err.response?.status === 404 || err.response?.status === 403) {
+          setTimeout(() => navigate("/dashboard/hackathons"), 1000);
+        }
       }
     };
-    fetchHackathonData();
-  }, [id, username]);
+    if (id) {
+      fetchHackathonData();
+    }
+  }, [id]);
 
   useEffect(() => {
     if (text === "send") {
