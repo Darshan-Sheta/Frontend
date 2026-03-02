@@ -82,6 +82,7 @@ const HackathonDetailsPage = () => {
       toast.success("Request sent successfully!");
       setVisible(false);
     } catch (error) {
+      console.error("Join request failed:", error);
       toast.error("Failed to send request");
     }
   };
